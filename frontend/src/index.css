@@ -1,0 +1,644 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/geist';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   CUSTOM THEME VARIABLES - Dark Olive Green + Warm Sand
+   ============================================ */
+
+:root {
+  /* ========== CUSTOM COLOR VARIABLES ========== */
+  /* Primary: Dark Olive Green (#4F5844) */
+  --primary-color: #4f5844;
+  --primary-color-light: #8c9577;
+  --primary-color-medium: #5e6653;
+  --primary-color-dark: #3e4636;
+  --primary-color-muted: #65705d;
+  --primary-color-subtle: #e8eddf;
+
+  /* Secondary: Warm Sand / Light Beige (#D8CEC6) */
+  --secondary-color: #d8cec6;
+  --secondary-color-light: #f3efea;
+  --secondary-color-dark: #c5bdb2;
+  --secondary-color-muted: #cbbeaf;
+
+  /* Accent: Deep Maroon (#7A2E2A) */
+  --accent-color: #7a2e2a;
+  --accent-color-light: #a14444;
+  --accent-color-dark: #5c2220;
+  --accent-color-muted: #8d3a33;
+
+  /* Text Colors - Light Background */
+  --text-color: #2b2f2a;
+  --text-color-secondary: #50584c;
+  --text-color-tertiary: #7d8478;
+  --text-color-disabled: #a6ada3;
+
+  /* Text Colors - Dark Background */
+  --text-color-dark-primary: #f8f6f2;
+  --text-color-dark-secondary: #e4ddd3;
+  --text-color-dark-tertiary: #c6c0b7;
+  --text-color-dark-disabled: #8e938b;
+
+  /* Border Colors */
+  --border-color: #c5bdb2;
+  --border-color-dark: #65705d;
+
+  /* Surface Colors */
+  --surface-light: #f5f2ec;
+  --surface-dark: #596351;
+
+  /* Semantic Colors */
+  --success-color: #5f7a5a;
+  --warning-color: #b08d57;
+  --error-color: #8d3a33;
+  --info-color: #58738a;
+
+  /* ========== SHADCN/UI CSS VARIABLES ========== */
+
+  /* Background - Light Beige */
+  --background: 35 30% 94%; /* #D8CEC6 */
+  --foreground: 0 0% 17%; /* #2B2F2A */
+
+  /* Card - Light Surface */
+  --card: 35 10% 95%; /* #F5F2EC */
+  --card-foreground: 0 0% 17%; /* #2B2F2A */
+
+  /* Popover */
+  --popover: 35 10% 95%;
+  --popover-foreground: 0 0% 17%;
+
+  /* Primary - Dark Olive Green */
+  --primary: 82 15% 30%; /* #4F5844 */
+  --primary-foreground: 0 0% 97%; /* #F8F6F2 */
+
+  /* Secondary - Warm Sand */
+  --secondary: 30 10% 80%; /* #D8CEC6 */
+  --secondary-foreground: 0 0% 17%; /* #2B2F2A */
+
+  /* Muted */
+  --muted: 30 10% 85%; /* #CBBEAF */
+  --muted-foreground: 0 0% 45%; /* #7D8478 */
+
+  /* Accent - Deep Maroon */
+  --accent: 3 45% 32%; /* #7A2E2A */
+  --accent-foreground: 0 0% 97%; /* #F8F6F2 */
+
+  /* Destructive - Error */
+  --destructive: 4 45% 38%; /* #8D3A33 */
+  --destructive-foreground: 0 0% 97%;
+
+  /* Borders */
+  --border: 30 10% 75%; /* #C5BDB2 */
+  --input: 30 10% 75%;
+  --ring: 82 15% 30%; /* #4F5844 */
+
+  /* Chart Colors */
+  --chart-1: 82 15% 30%;
+  --chart-2: 30 10% 80%;
+  --chart-3: 3 45% 32%;
+  --chart-4: 82 15% 50%;
+  --chart-5: 40 30% 50%;
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Sidebar */
+  --sidebar: 35 10% 96%;
+  --sidebar-foreground: 0 0% 17%;
+  --sidebar-primary: 82 15% 30%;
+  --sidebar-primary-foreground: 0 0% 97%;
+  --sidebar-accent: 30 10% 85%;
+  --sidebar-accent-foreground: 0 0% 17%;
+  --sidebar-border: 30 10% 75%;
+  --sidebar-ring: 82 15% 30%;
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+
+.dark {
+  /* Background - Dark Olive */
+  --background: 82 15% 18%; /* #2E3428 */
+  --foreground: 0 0% 97%; /* #F8F6F2 */
+
+  /* Card - Dark Surface */
+  --card: 82 10% 22%; /* #3A4132 */
+  --card-foreground: 0 0% 97%;
+
+  /* Popover */
+  --popover: 82 10% 22%;
+  --popover-foreground: 0 0% 97%;
+
+  /* Primary - Dark Olive Green */
+  --primary: 82 15% 30%; /* #4F5844 */
+  --primary-foreground: 0 0% 97%;
+
+  /* Secondary */
+  --secondary: 30 10% 25%; /* #3D3833 */
+  --secondary-foreground: 0 0% 97%;
+
+  /* Muted */
+  --muted: 82 10% 25%;
+  --muted-foreground: 30 10% 70%;
+
+  /* Accent - Deep Maroon */
+  --accent: 3 45% 32%; /* #7A2E2A */
+  --accent-foreground: 0 0% 97%;
+
+  /* Destructive */
+  --destructive: 4 45% 38%;
+  --destructive-foreground: 0 0% 97%;
+
+  /* Borders */
+  --border: 82 10% 30%; /* #65705D */
+  --input: 82 10% 30%;
+  --ring: 82 15% 30%;
+
+  /* Chart Colors */
+  --chart-1: 82 15% 40%;
+  --chart-2: 30 10% 60%;
+  --chart-3: 3 45% 40%;
+  --chart-4: 82 15% 50%;
+  --chart-5: 40 30% 45%;
+
+  /* Sidebar */
+  --sidebar: 82 10% 20%;
+  --sidebar-foreground: 0 0% 97%;
+  --sidebar-primary: 82 15% 30%;
+  --sidebar-primary-foreground: 0 0% 97%;
+  --sidebar-accent: 82 10% 25%;
+  --sidebar-accent-foreground: 0 0% 97%;
+  --sidebar-border: 82 10% 30%;
+  --sidebar-ring: 82 15% 30%;
+}
+
+/* ============================================
+   ROOT STYLES
+   ============================================ */
+
+#root {
+  max-width: 100%;
+  margin: 0 auto;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   SHADCN LAYER
+   ============================================ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ============================================
+   TAILWIND THEME
+   ============================================ */
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Geist Variable', 'Inter', sans-serif;
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ============================================
+   CUSTOM UTILITY CLASSES
+   ============================================ */
+
+/* ===== Primary Colors ===== */
+.bg-primary-custom {
+  background-color: var(--primary-color);
+}
+.bg-primary-light {
+  background-color: var(--primary-color-light);
+}
+.bg-primary-medium {
+  background-color: var(--primary-color-medium);
+}
+.bg-primary-dark {
+  background-color: var(--primary-color-dark);
+}
+.bg-primary-muted {
+  background-color: var(--primary-color-muted);
+}
+.bg-primary-subtle {
+  background-color: var(--primary-color-subtle);
+}
+
+.text-primary-custom {
+  color: var(--primary-color);
+}
+.text-primary-light {
+  color: var(--primary-color-light);
+}
+.text-primary-dark {
+  color: var(--primary-color-dark);
+}
+
+/* ===== Secondary Colors ===== */
+.bg-secondary-custom {
+  background-color: var(--secondary-color);
+}
+.bg-secondary-light {
+  background-color: var(--secondary-color-light);
+}
+.bg-secondary-dark {
+  background-color: var(--secondary-color-dark);
+}
+.bg-secondary-muted {
+  background-color: var(--secondary-color-muted);
+}
+
+.text-secondary-custom {
+  color: var(--secondary-color);
+}
+
+/* ===== Accent Colors ===== */
+.bg-accent-custom {
+  background-color: var(--accent-color);
+}
+.bg-accent-light {
+  background-color: var(--accent-color-light);
+}
+.bg-accent-dark {
+  background-color: var(--accent-color-dark);
+}
+.bg-accent-muted {
+  background-color: var(--accent-color-muted);
+}
+
+.text-accent-custom {
+  color: var(--accent-color);
+}
+.text-accent-light {
+  color: var(--accent-color-light);
+}
+.text-accent-dark {
+  color: var(--accent-color-dark);
+}
+
+/* ===== Text Colors ===== */
+/* Light Background */
+.text-primary {
+  color: var(--text-color);
+}
+.text-secondary {
+  color: var(--text-color-secondary);
+}
+.text-tertiary {
+  color: var(--text-color-tertiary);
+}
+.text-disabled {
+  color: var(--text-color-disabled);
+}
+
+/* Dark Background */
+.text-dark-primary {
+  color: var(--text-color-dark-primary);
+}
+.text-dark-secondary {
+  color: var(--text-color-dark-secondary);
+}
+.text-dark-tertiary {
+  color: var(--text-color-dark-tertiary);
+}
+.text-dark-disabled {
+  color: var(--text-color-dark-disabled);
+}
+
+/* ===== Semantic Colors ===== */
+.bg-success {
+  background-color: var(--success-color);
+}
+.text-success {
+  color: var(--success-color);
+}
+
+.bg-warning {
+  background-color: var(--warning-color);
+}
+.text-warning {
+  color: var(--warning-color);
+}
+
+.bg-error {
+  background-color: var(--error-color);
+}
+.text-error {
+  color: var(--error-color);
+}
+
+.bg-info {
+  background-color: var(--info-color);
+}
+.text-info {
+  color: var(--info-color);
+}
+
+/* ===== Surface Colors ===== */
+.bg-surface-light {
+  background-color: var(--surface-light);
+}
+.bg-surface-dark {
+  background-color: var(--surface-dark);
+}
+
+/* ===== Border Colors ===== */
+.border-custom {
+  border-color: var(--border-color);
+}
+.border-custom-dark {
+  border-color: var(--border-color-dark);
+}
+.border-primary-custom {
+  border-color: var(--primary-color);
+}
+
+/* ===== Gradient Utilities ===== */
+.bg-gradient-hero {
+  background: linear-gradient(
+    135deg,
+    #d8cec6 0%,
+    #cfc4b8 35%,
+    #8c9577 70%,
+    #4f5844 100%
+  );
+}
+.bg-gradient-olive {
+  background: linear-gradient(135deg, #5e6653, #4f5844, #3e4636);
+}
+.bg-gradient-warm {
+  background: linear-gradient(135deg, #f1e8dd, #d8cec6, #cbbeaf);
+}
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #394131, #4f5844, #5e6653);
+}
+.bg-gradient-olive-maroon {
+  background: linear-gradient(135deg, #4f5844, #7a2e2a);
+}
+.bg-gradient-maroon {
+  background: linear-gradient(135deg, #7a2e2e, #a14444);
+}
+.bg-gradient-primary-custom {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--primary-color-dark) 100%
+  );
+}
+.bg-gradient-sand {
+  background: linear-gradient(
+    135deg,
+    var(--secondary-color-light) 0%,
+    var(--secondary-color) 100%
+  );
+}
+
+/* ===== Shadow Utilities ===== */
+.shadow-soft {
+  box-shadow: 0 4px 14px 0 rgba(79, 88, 68, 0.12);
+}
+.shadow-soft-lg {
+  box-shadow: 0 8px 30px 0 rgba(79, 88, 68, 0.12);
+}
+.shadow-medium {
+  box-shadow: 0 4px 14px 0 rgba(79, 88, 68, 0.22);
+}
+.shadow-medium-lg {
+  box-shadow: 0 8px 30px 0 rgba(79, 88, 68, 0.22);
+}
+.shadow-large {
+  box-shadow: 0 4px 14px 0 rgba(79, 88, 68, 0.35);
+}
+.shadow-large-lg {
+  box-shadow: 0 8px 30px 0 rgba(79, 88, 68, 0.35);
+}
+.shadow-primary-custom {
+  box-shadow: 0 4px 14px 0 rgba(79, 88, 68, 0.35);
+}
+.shadow-primary-lg {
+  box-shadow: 0 8px 30px 0 rgba(79, 88, 68, 0.35);
+}
+.shadow-card {
+  box-shadow: 0 4px 14px 0 rgba(79, 88, 68, 0.12);
+}
+.shadow-card-hover {
+  box-shadow: 0 8px 30px 0 rgba(79, 88, 68, 0.22);
+}
+.shadow-nav {
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   CUSTOM ANIMATIONS
+   ============================================ */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(79, 88, 68, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(79, 88, 68, 0.4);
+  }
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes heroGradient {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2.5s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-hero {
+  animation: heroGradient 10s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--secondary-color-light);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 9999px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color-dark);
+}
+
+/* ============================================
+   SELECTION STYLING
+   ============================================ */
+
+::selection {
+  background: var(--primary-color);
+  color: var(--text-color-dark-primary);
+}
+
+/* ============================================
+   FOCUS STYLING
+   ============================================ */
+
+*:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: var(--text-color-dark-primary);
+}
+
+/* ============================================
+   LINK STYLES
+   ============================================ */
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-color-dark);
+}
+
+.dark a {
+  color: var(--primary-color-light);
+}
+
+.dark a:hover {
+  color: var(--primary-color);
+}
