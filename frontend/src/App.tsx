@@ -10,6 +10,9 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { About } from './pages/About';
 import { Map } from './pages/Map';
+import { Dashboard } from './pages/Dashboard';
+import { Resources } from './pages/Resources';
+import { Profile } from './pages/Profile';
 
 function App() {
   const isAuthenticated = !!localStorage.getItem('token');
@@ -21,9 +24,14 @@ function App() {
         richColors
       />
       <Routes>
+        {/* Public Routes */}
         <Route
           path='/'
           element={<Home />}
+        />
+        <Route
+          path='/about'
+          element={<About />}
         />
         <Route
           path='/login'
@@ -33,19 +41,28 @@ function App() {
           path='/register'
           element={<Register />}
         />
+
+        {/* Protected Routes */}
         <Route
-          path='/about'
-          element={<About />}
+          path='/dashboard'
+          element={isAuthenticated ? <Dashboard /> : <Navigate to='/login' />}
+        />
+        <Route
+          path='/resources'
+          element={isAuthenticated ? <Resources /> : <Navigate to='/login' />}
         />
         <Route
           path='/map'
-          element={<Map />}
+          element={isAuthenticated ? <Map /> : <Navigate to='/login' />}
         />
         <Route
-          path='/dashboard'
-          element={
-            isAuthenticated ? <div>Dashboard</div> : <Navigate to='/login' />
-          }
+          path='/profile'
+          element={isAuthenticated ? <Profile /> : <Navigate to='/login' />}
+        />
+
+        <Route
+          path='*'
+          element={<Navigate to='/' />}
         />
       </Routes>
     </Router>

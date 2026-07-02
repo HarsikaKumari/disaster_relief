@@ -28,10 +28,6 @@ import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
 import api from '../lib/api';
 
-// ============================================
-// LOGO COMPONENT
-// ============================================
-
 const Logo = ({ className = '' }: { className?: string }) => {
   return (
     <svg
@@ -153,7 +149,7 @@ const FloatingStone = ({
   };
 
   return (
-  <motion.div
+    <motion.div
       initial={{ x: 0, y: 0, rotate: 0, scale: 1 }}
       animate={{
         x: [0, x, -x * 0.5, x * 0.3, 0],
@@ -388,7 +384,8 @@ export const Register = () => {
         toast.error(response.data.message || 'Registration failed');
       }
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Failed to register. Please try again.';
+      const message =
+        err.response?.data?.message || 'Failed to register. Please try again.';
       setError(message);
       toast.error(message);
     } finally {
