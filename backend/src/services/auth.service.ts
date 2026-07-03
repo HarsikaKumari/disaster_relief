@@ -178,7 +178,6 @@ export class AuthService {
         message: 'Account is already verified. Please login.',
       };
     }
-    console.log(user.otp);
     if (user.otp !== otp) {
       await prisma.user.update({
         where: { email },

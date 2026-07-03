@@ -185,15 +185,15 @@ export const Sidebar = ({
             onClick={() => setMobileOpen(false)}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 ${
               active === item.label
-                ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                : 'text-text-secondary hover:bg-primary/5 hover:text-primary'
+                ? 'bg-primary/40 text-white shadow-lg shadow-primary/25'
+                : 'text-white hover:bg-primary/5 hover:text-primary'
             }`}
           >
             <span
               className={
                 active === item.label
                   ? 'text-white'
-                  : 'text-text-secondary group-hover:text-primary transition-colors'
+                  : 'text-secondary group-hover:text-primary transition-colors'
               }
             >
               {item.icon}
@@ -239,7 +239,7 @@ export const Sidebar = ({
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className='hidden md:flex md:w-64 lg:w-72 flex-col bg-primary backdrop-blur-xl rounded-r-3xl shadow-xl shadow-primary/5 h-screen sticky top-0 flex-shrink-0 border-r border-white/20'>
+      <div className='hidden md:flex md:w-64 lg:w-72 flex-col bg-primary/20 backdrop-blur-xl rounded-r-3xl shadow-xl shadow-primary/5 h-screen sticky top-0 flex-shrink-0 border-r border-white/20'>
         <SidebarContent />
       </div>
 

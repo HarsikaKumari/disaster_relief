@@ -2,7 +2,6 @@ import nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 
 let transporter: Transporter | null = null;
- console.log("email : "+process.env.SMTP_USER)
 const getTransporter = (): Transporter => {
   if (!transporter) {
     transporter = nodemailer.createTransport({
