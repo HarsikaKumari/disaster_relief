@@ -116,7 +116,7 @@ export const About = () => {
   };
 
   return (
-    <div className='min-h-screen bg-gradient-to-b from-sand-light via-white to-secondary/20 pt-20'>
+    <div className='min-h-screen bg-gradient-to-b from-sand-light via-white to-secondary/20'>
       {/* ========== HERO SECTION ========== */}
       <section className='relative py-16 md:py-24 bg-gradient-olive text-white overflow-hidden'>
         <div className='absolute inset-0 bg-white/5' />

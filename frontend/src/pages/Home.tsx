@@ -260,7 +260,7 @@ export const Home = () => {
             </div>
 
             <div className='hidden md:flex items-center gap-8'>
-              {['Home', 'About', 'Map', 'Resources'].map((item) => (
+              {['Home', 'About', 'Contact', 'Map', 'Resources'].map((item) => (
                 <Link
                   key={item}
                   to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
