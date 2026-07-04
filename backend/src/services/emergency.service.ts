@@ -1,9 +1,10 @@
 import prisma from '../config/prisma';
 import { CreateEmergencyInput, UpdateEmergencyInput, AssignEmergencyInput } from '../types/emergency.types';
+import notificationService from './notification.service';
 
 export class EmergencyService {
   async createEmergency(userId: string, data: CreateEmergencyInput) {
-    return prisma.emergency.create({
+    const emergency = await prisma.emergency.create({
       data: {
         title: data.title,
         type: data.type,
@@ -27,6 +28,11 @@ export class EmergencyService {
         },
       },
     });
+
+    // ✅ Send notification to admins and volunteers
+    await notificationService.sendEmergencyAlert(emergency.id);
+
+    return emergency;
   }
 
   async getAllEmergencies(filters?: { status?: string; severity?: string; type?: string }) {
@@ -74,7 +80,7 @@ export class EmergencyService {
   }
 
   async updateEmergency(emergencyId: string, data: UpdateEmergencyInput) {
-    return prisma.emergency.update({
+    const emergency = await prisma.emergency.update({
       where: { id: emergencyId },
       data: {
         ...(data.title && { title: data.title }),
@@ -97,10 +103,17 @@ export class EmergencyService {
         },
       },
     });
+
+    // ✅ Send notification if status changed
+    if (data.status) {
+      await notificationService.sendStatusUpdateNotification(emergencyId, data.status);
+    }
+
+    return emergency;
   }
 
   async assignEmergency(emergencyId: string, data: AssignEmergencyInput) {
-    return prisma.emergency.update({
+    const emergency = await prisma.emergency.update({
       where: { id: emergencyId },
       data: {
         assignedToId: data.assignedToId,
@@ -116,6 +129,11 @@ export class EmergencyService {
         },
       },
     });
+
+    // ✅ Send assignment notification to volunteer and admins
+    await notificationService.sendAssignmentNotification(emergencyId, data.assignedToId);
+
+    return emergency;
   }
 
   async getEmergencyStats() {

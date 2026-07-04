@@ -2,10 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken, TokenPayload } from '../utils/jwt';
 import prisma from '../config/prisma';
 
+// Extend Express Request type
 declare global {
   namespace Express {
     interface Request {
-      user?: TokenPayload;
+      user?: TokenPayload & { role: string };
     }
   }
 }
@@ -39,6 +40,7 @@ export const authenticate = async (
     try {
       const decoded = verifyToken(token);
       
+      // Check if user exists and is active
       const user = await prisma.user.findUnique({
         where: { id: decoded.id },
         select: { id: true, isActive: true, role: true },
@@ -60,7 +62,12 @@ export const authenticate = async (
         return;
       }
 
-      req.user = decoded;
+      // ✅ Set user with role
+      req.user = {
+        id: decoded.id,
+        email: decoded.email,
+        role: user.role,  // ← YAHAN SE ROLE AAYEGA
+      };
       next();
     } catch (error) {
       res.status(401).json({
@@ -78,9 +85,10 @@ export const authenticate = async (
   }
 };
 
+// ========== AUTHORIZE MIDDLEWARE ==========
 export const authorize = (...allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user;
+    const user = req.user;
 
     if (!user) {
       res.status(401).json({
@@ -90,10 +98,11 @@ export const authorize = (...allowedRoles: string[]) => {
       return;
     }
 
+    // ✅ Check if user role is in allowed roles
     if (!allowedRoles.includes(user.role)) {
       res.status(403).json({
         success: false,
-        message: 'Forbidden. You do not have permission to access this resource.',
+        message: `Forbidden. Only ${allowedRoles.join(', ')} can access this resource.`,
       });
       return;
     }

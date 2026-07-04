@@ -1,36 +1,29 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Shield,
-  Award,
-  Star,
-  CheckCircle,
-  XCircle,
-  Bell,
-  Menu,
-  Search,
-  Users,
-  Plus,
-  X,
-  Loader2,
-  Calendar,
-  Clock,
   Briefcase,
-  Heart,
+  Clock,
   FileText,
+  Heart,
+  Loader2,
+  Mail,
+  MapPin,
+  Phone,
+  Plus,
+  Shield,
+  User,
+  Users
 } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Navbar } from '../components/layouts/Navbar';
+import { Sidebar } from '../components/layouts/sidebar';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Badge } from '../components/ui/badge';
-import { Sidebar } from '../components/layouts/sidebar';
-import { Navbar } from '../components/layouts/Navbar';
+import api from '../lib/api';
+
 // ============================================
 // TYPES
 // ============================================
@@ -41,7 +34,7 @@ interface VolunteerFormData {
   phone: string;
   location: string;
   skills: string[];
-  availability: 'AVAILABLE' | 'BUSY' | 'OFF_DUTY';
+  availability: 'AVAILABLE' | 'BUSY' | 'OFF_DUTY' | 'UNREACHABLE';
   status: 'Active' | 'Inactive' | 'Pending';
   bio: string;
   emergencyContact: string;
@@ -83,6 +76,7 @@ export const AddVolunteer = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [formData, setFormData] = useState<VolunteerFormData>({
     name: '',
@@ -117,14 +111,48 @@ export const AddVolunteer = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ========== SUBMIT TO BACKEND ==========
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    setTimeout(() => {
+
+    // Validation
+    if (!formData.name || !formData.email || !formData.phone) {
+      setError('Please fill in all required fields');
       setLoading(false);
-      toast.success('Volunteer added successfully!');
-      navigate('/volunteers');
-    }, 1500);
+      return;
+    }
+
+    try {
+   
+      // Since we don't have a dedicated volunteer creation API,
+      // we'll use the existing user registration with VOLUNTEER role
+      // This is a workaround - in production, you'd have admin create user API
+      const response = await api.post('/auth/register', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: 'Temp@123' + Date.now(), // Temporary password
+        role: 'VOLUNTEER',
+      });
+
+      if (response.data.success) {
+        toast.success('Volunteer added successfully!');
+        navigate('/volunteers');
+      } else {
+        setError(response.data.message || 'Failed to add volunteer');
+        toast.error(response.data.message || 'Failed to add volunteer');
+      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error('Add volunteer error:', err);
+      const message = err.response?.data?.message || 'Failed to add volunteer';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -138,8 +166,8 @@ export const AddVolunteer = () => {
       <div className='flex-1 min-w-0 overflow-y-auto h-screen'>
         {/* Navbar */}
         <Navbar
-          title='Dashboard'
-          subtitle={`Add Volunteer`}
+          title='Add Volunteer'
+          subtitle='Add a new volunteer to the network'
           onMenuClick={() => setMobileOpen(true)}
         />
 
@@ -152,7 +180,7 @@ export const AddVolunteer = () => {
           >
             <div className='bg-white/60 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-xl shadow-primary/5 border border-white/40'>
               {/* Header */}
-              <div className='flex items-center gap-3 mb-6 pb-4 border-t border-white/20'>
+              <div className='flex items-center gap-3 mb-6 pb-4 border-b border-white/20'>
                 <div className='w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center'>
                   <Users className='w-5 h-5 text-primary' />
                 </div>
@@ -170,10 +198,13 @@ export const AddVolunteer = () => {
                 </Badge>
               </div>
 
-              <form
-                onSubmit={handleSubmit}
-                className='space-y-5'
-              >
+              {error && (
+                <div className="mb-4 p-3 bg-error/10 border border-error/20 rounded-xl text-error text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className='space-y-5'>
                 {/* Personal Information */}
                 <div className='bg-sand-light/30 rounded-xl p-4 border border-white/20'>
                   <p className='text-sm font-medium text-text-primary mb-3 flex items-center gap-2'>
@@ -308,6 +339,7 @@ export const AddVolunteer = () => {
                       <option value='AVAILABLE'>✅ Available</option>
                       <option value='BUSY'>🟡 Busy</option>
                       <option value='OFF_DUTY'>⚪ Off Duty</option>
+                      <option value='UNREACHABLE'>🔴 Unreachable</option>
                     </select>
                   </div>
                   <div className='space-y-1.5'>
@@ -387,10 +419,7 @@ export const AddVolunteer = () => {
 
                 {/* Submit Buttons */}
                 <div className='flex gap-3 pt-4 border-t border-white/20'>
-                  <Link
-                    to='/volunteers'
-                    className='flex-1'
-                  >
+                  <Link to='/volunteers' className='flex-1'>
                     <Button
                       type='button'
                       variant='outline'

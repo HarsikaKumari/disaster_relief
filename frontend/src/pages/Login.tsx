@@ -311,7 +311,6 @@ export const Login = () => {
     }, 1000);
   };
 
-  // ========== API: LOGIN ==========
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -329,16 +328,13 @@ export const Login = () => {
 
       if (response.data.success) {
         toast.success(response.data.message);
-        // Check if user is verified
         if (response.data.user?.isVerified) {
-          // Already verified - directly login
           if (response.data.token) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
           }
           navigate('/dashboard');
         } else {
-          // Not verified - send OTP
           setStep('otp');
           startTimer();
           toast.info('Please verify your email with OTP');
