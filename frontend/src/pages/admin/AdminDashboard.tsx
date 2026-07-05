@@ -25,9 +25,6 @@ import { Sidebar } from '../../components/layouts/sidebar';
 import { Badge } from '../../components/ui/badge';
 import api from '../../lib/api';
 
-// ============================================
-// TYPES
-// ============================================
 
 interface User {
   id: string;
@@ -65,10 +62,6 @@ interface Stats {
   totalMissionsCompleted: number;
   responseTime: { average: number; min: number; max: number };
 }
-
-// ============================================
-// DARK SKELETON COMPONENTS
-// ============================================
 
 const StatCardSkeleton = () => (
   <div className="bg-white/50 backdrop-blur-md rounded-2xl p-5 shadow-lg shadow-primary/5 border border-white/30">

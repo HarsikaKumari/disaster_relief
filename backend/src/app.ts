@@ -20,9 +20,9 @@ const app = express();
 // ✅ CORS
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: '*',
     credentials: true,
-  })
+  }),
 );
 
 // ✅ Body Parsers
@@ -68,14 +68,21 @@ app.use((_, res) => {
   });
 });
 // ✅ Global Error Handler
-app.use((err: any, _: express.Request, res: express.Response, __: express.NextFunction) => {
-  console.error('Global Error:', err);
+app.use(
+  (
+    err: any,
+    _: express.Request,
+    res: express.Response,
+    __: express.NextFunction,
+  ) => {
+    console.error('Global Error:', err);
 
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
-});
+    res.status(err.status || 500).json({
+      success: false,
+      message: err.message || 'Internal server error',
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    });
+  },
+);
 
 export default app;
