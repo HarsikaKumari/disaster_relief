@@ -6,5 +6,5 @@ const router = Router();
 
 router.get('/profile', authenticate, userController.getProfile);
 router.put('/profile', authenticate, userController.updateProfile);
-
+router.put('/change-password', authenticate, userController.changePassword);
 export default router;

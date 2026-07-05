@@ -172,7 +172,7 @@ model User {
    messageReactions MessageReaction[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+   
   @@index([email, phone])
   @@index([role])
   @@map("users")

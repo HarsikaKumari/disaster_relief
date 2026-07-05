@@ -1,19 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { motion } from 'framer-motion';
 import {
-    AlertTriangle,
-    ArrowLeft,
-    Check,
-    CheckCheck,
-    File,
-    Image,
-    Loader2,
-    MapPin,
-    Menu,
-    MoreHorizontal,
-    Paperclip,
-    Send,
-    X
+  AlertTriangle,
+  ArrowLeft,
+  Check,
+  CheckCheck,
+  File,
+  Frown,
+  Heart,
+  Image,
+  Laugh,
+  Loader2,
+  MapPin,
+  Menu,
+  MoreHorizontal,
+  Paperclip,
+  Send,
+  Star,
+  ThumbsUp,
+  X
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -39,6 +44,17 @@ interface Message {
     id: string;
     name: string;
     profileImage?: string;
+  };
+  reactions?: Reaction[];
+}
+
+interface Reaction {
+  id: string;
+  emoji: string;
+  userId: string;
+  user: {
+    id: string;
+    name: string;
   };
 }
 
@@ -69,10 +85,34 @@ interface ChatRoom {
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 // ============================================
-// MESSAGE BUBBLE
+// REACTION EMOJIS
 // ============================================
 
-const MessageBubble = ({ message, isOwn }: { message: Message; isOwn: boolean }) => {
+const REACTION_EMOJIS = [
+  { emoji: '👍', label: 'Thumbs Up', icon: ThumbsUp },
+  { emoji: '❤️', label: 'Heart', icon: Heart },
+  { emoji: '😂', label: 'Laugh', icon: Laugh },
+  { emoji: '😮', label: 'Wow', icon: Star },
+  { emoji: '😢', label: 'Sad', icon: Frown },
+];
+
+// ============================================
+// MESSAGE BUBBLE WITH REACTIONS
+// ============================================
+const MessageBubble = ({ 
+  message, 
+  isOwn,
+  onReaction,
+  currentUserId 
+}: { 
+  message: Message; 
+  isOwn: boolean;
+  onReaction: (messageId: string, emoji: string) => void;
+  currentUserId: string;
+}) => {
+  const [showReactions, setShowReactions] = useState(false);
+  const [isReacting, setIsReacting] = useState(false);
+
   const getTime = (date: string) => {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -90,102 +130,217 @@ const MessageBubble = ({ message, isOwn }: { message: Message; isOwn: boolean })
     return url.split('/').pop() || 'File';
   };
 
+  // Group reactions by emoji
+  const groupedReactions = message.reactions?.reduce((acc, reaction) => {
+    if (!acc[reaction.emoji]) {
+      acc[reaction.emoji] = { count: 0, users: [] };
+    }
+    acc[reaction.emoji].count += 1;
+    acc[reaction.emoji].users.push(reaction.userId);
+    return acc;
+  }, {} as Record<string, { count: number; users: string[] }>) || {};
+
+  // Check if current user reacted with specific emoji
+  const hasUserReacted = (emoji: string) => {
+    return message.reactions?.some(
+      (r) => r.userId === currentUserId && r.emoji === emoji
+    ) || false;
+  };
+
+  // Handle reaction click
+  const handleReactionClick = async (emoji: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    if (isReacting) return;
+    setIsReacting(true);
+    try {
+      await onReaction(message.id, emoji);
+    } finally {
+      setIsReacting(false);
+      setShowReactions(false);
+    }
+  };
+
+  // Toggle reaction popup
+  const toggleReactionPopup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setShowReactions(!showReactions);
+  };
+
+  // Check if reactions exist
+  const hasReactions = Object.keys(groupedReactions).length > 0;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}
+      className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} relative group`}
     >
-      {/* ✅ SENDER NAME */}
+      {/* SENDER NAME */}
       <span className={`text-[10px] font-medium mb-0.5 ${isOwn ? 'text-primary-light/80' : 'text-text-secondary'}`}>
         {message.sender?.name || 'Unknown User'}
       </span>
 
-      <div
-        className={`max-w-[75%] rounded-2xl p-3 ${
-          isOwn
-            ? 'bg-gradient-to-br from-primary to-primary-dark text-white'
-            : 'bg-white/70 backdrop-blur-sm border border-white/30 text-text-primary'
-        }`}
-      >
-        {/* TEXT MESSAGE */}
-        {message.type === 'TEXT' && (
-          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-        )}
+      {/* MESSAGE WRAPPER */}
+      <div className="relative inline-block">
+        {/* MESSAGE BUBBLE */}
+        <div
+          className={`max-w-[75%] rounded-2xl p-3 ${
+            isOwn
+              ? 'bg-gradient-to-br from-primary to-primary-dark text-white'
+              : 'bg-white/70 backdrop-blur-sm border border-white/30 text-text-primary'
+          } ${hasReactions ? 'pb-6' : ''}`}
+        >
+          {/* TEXT MESSAGE */}
+          {message.type === 'TEXT' && (
+            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+          )}
 
-        {/* IMAGE MESSAGE */}
-        {message.type === 'IMAGE' && message.mediaUrl && (
-          <div className="space-y-1.5">
-            <img
-              src={message.mediaUrl}
-              alt="Shared image"
-              className="rounded-lg max-w-full max-h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => window.open(message.mediaUrl, '_blank')}
-            />
-            {message.content && message.content !== '📎 Image' && (
-              <p className="text-sm whitespace-pre-wrap break-words text-white/90">
-                {message.content}
-              </p>
+          {/* IMAGE MESSAGE */}
+          {message.type === 'IMAGE' && message.mediaUrl && (
+            <div className="space-y-1.5">
+              <img
+                src={message.mediaUrl}
+                alt="Shared image"
+                className="rounded-lg max-w-full max-h-80 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                onClick={() => window.open(message.mediaUrl, '_blank')}
+              />
+              {message.content && message.content !== '📎 Image' && (
+                <p className="text-sm whitespace-pre-wrap break-words text-white/90">
+                  {message.content}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* FILE MESSAGE */}
+          {message.type === 'FILE' && message.mediaUrl && (
+            <a
+              href={message.mediaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${isOwn ? 'bg-white/10' : 'bg-sand-light/50'} border ${isOwn ? 'border-white/10' : 'border-white/30'}`}>
+                <div className={`w-10 h-10 rounded-lg ${isOwn ? 'bg-white/20' : 'bg-primary/10'} flex items-center justify-center`}>
+                  {getFileIcon(message.mediaUrl)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{getFileName(message.mediaUrl)}</p>
+                  <p className="text-xs opacity-70">Click to download</p>
+                </div>
+              </div>
+            </a>
+          )}
+
+          {/* LOCATION MESSAGE */}
+          {message.type === 'LOCATION' && message.mediaUrl && (
+            <a
+              href={message.mediaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block"
+            >
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${isOwn ? 'bg-white/10' : 'bg-sand-light/50'} border ${isOwn ? 'border-white/10' : 'border-white/30'}`}>
+                <MapPin className="w-8 h-8 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">{message.content}</p>
+                  <p className="text-xs opacity-70">Open in Google Maps</p>
+                </div>
+              </div>
+            </a>
+          )}
+
+          {/* SYSTEM MESSAGE */}
+          {message.type === 'SYSTEM' && (
+            <p className="text-sm italic opacity-70 text-center">{message.content}</p>
+          )}
+
+          {/* TIME & READ STATUS */}
+          <div className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${isOwn ? 'text-white/70' : 'text-text-tertiary'}`}>
+            <span>{getTime(message.createdAt)}</span>
+            {isOwn && (
+              <span>
+                {message.isRead ? (
+                  <CheckCheck className="w-3 h-3" />
+                ) : (
+                  <Check className="w-3 h-3" />
+                )}
+              </span>
             )}
           </div>
-        )}
 
-        {/* FILE MESSAGE */}
-        {message.type === 'FILE' && message.mediaUrl && (
-          <a
-            href={message.mediaUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block"
-          >
-            <div className={`flex items-center gap-3 p-3 rounded-xl ${isOwn ? 'bg-white/10' : 'bg-sand-light/50'} border ${isOwn ? 'border-white/10' : 'border-white/30'}`}>
-              <div className={`w-10 h-10 rounded-lg ${isOwn ? 'bg-white/20' : 'bg-primary/10'} flex items-center justify-center`}>
-                {getFileIcon(message.mediaUrl)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{getFileName(message.mediaUrl)}</p>
-                <p className="text-xs opacity-70">Click to download</p>
-              </div>
+          {/* ✅ REACTIONS DISPLAY - BOTTOM LEFT CORNER (INSIDE BUBBLE) */}
+          {hasReactions && (
+            <div className="absolute -bottom-3 left-2 flex flex-wrap gap-0.5 z-5">
+              {Object.entries(groupedReactions).map(([emoji, { count, users }]) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={(e) => handleReactionClick(emoji, e)}
+                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] transition-all shadow-sm ${
+                    users.includes(currentUserId)
+                      ? 'bg-primary/20 border border-primary/30 text-primary'
+                      : 'bg-white/90 border border-white/50 hover:bg-white'
+                  }`}
+                >
+                  <span className="text-[10px]">{emoji}</span>
+                  <span className="font-medium text-[9px]">{count}</span>
+                </button>
+              ))}
             </div>
-          </a>
-        )}
-
-        {/* LOCATION MESSAGE */}
-        {message.type === 'LOCATION' && message.mediaUrl && (
-          <a
-            href={message.mediaUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block"
-          >
-            <div className={`flex items-center gap-3 p-3 rounded-xl ${isOwn ? 'bg-white/10' : 'bg-sand-light/50'} border ${isOwn ? 'border-white/10' : 'border-white/30'}`}>
-              <MapPin className="w-8 h-8 text-primary" />
-              <div>
-                <p className="text-sm font-medium">{message.content}</p>
-                <p className="text-xs opacity-70">Open in Google Maps</p>
-              </div>
-            </div>
-          </a>
-        )}
-
-        {/* SYSTEM MESSAGE */}
-        {message.type === 'SYSTEM' && (
-          <p className="text-sm italic opacity-70 text-center">{message.content}</p>
-        )}
-
-        {/* TIME & READ STATUS */}
-        <div className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${isOwn ? 'text-white/70' : 'text-text-tertiary'}`}>
-          <span>{getTime(message.createdAt)}</span>
-          {isOwn && (
-            <span>
-              {message.isRead ? (
-                <CheckCheck className="w-3 h-3" />
-              ) : (
-                <Check className="w-3 h-3" />
-              )}
-            </span>
           )}
         </div>
+
+        {/* ✅ REACTION BUTTON - BOTTOM LEFT CORNER OF BUBBLE */}
+        <button
+          type="button"
+          onClick={toggleReactionPopup}
+          className={`absolute -bottom-2 -left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/95 backdrop-blur-sm border border-white/50 rounded-full p-1 shadow-lg hover:bg-sand-light/80 hover:scale-110 z-10`}
+          aria-label="Add reaction"
+        >
+          <span className="text-xs leading-none">😊</span>
+        </button>
+
+        {/* REACTION PICKER POPUP */}
+        {showReactions && (
+          <>
+            {/* Backdrop click to close */}
+            <div 
+              className="fixed inset-0 z-20" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowReactions(false);
+              }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 10 }}
+              className="absolute z-30 bottom-8 left-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/30 p-1.5 flex gap-0.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {REACTION_EMOJIS.map(({ emoji, label }) => {
+                const isActive = hasUserReacted(emoji);
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={(e) => handleReactionClick(emoji, e)}
+                    disabled={isReacting}
+                    className={`p-1.5 rounded-xl transition-all text-lg hover:bg-sand-light/50 ${
+                      isActive ? 'bg-primary/20 scale-110' : ''
+                    } ${isReacting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title={label}
+                  >
+                    <span className="text-xl leading-none">{emoji}</span>
+                  </button>
+                );
+              })}
+            </motion.div>
+          </>
+        )}
       </div>
     </motion.div>
   );
@@ -215,6 +370,9 @@ export const ChatWindow = () => {
   const socketRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMounted = useRef(true);
+  
+  // ✅ For tracking new messages (to prevent scroll on reaction)
+  const lastMessageId = useRef<string | null>(null);
 
   // Get current user
   const userStr = localStorage.getItem('user');
@@ -272,6 +430,15 @@ export const ChatWindow = () => {
 
         return [...prev, message];
       });
+    });
+
+    // Socket event for real-time reactions
+    socket.on('reaction-updated', ({ messageId, reactions }) => {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, reactions } : msg
+        )
+      );
     });
 
     socket.on('user-typing', ({ userId, isTyping: typing }) => {
@@ -339,10 +506,122 @@ export const ChatWindow = () => {
     try {
       const response = await api.get(`/chat/rooms/${roomId}/messages`);
       if (response.data.success) {
-        setMessages(response.data.data);
+        // Fetch reactions for each message
+        const messagesWithReactions = await Promise.all(
+          response.data.data.map(async (msg: Message) => {
+            try {
+              const reactionRes = await api.get(`/chat/messages/${msg.id}/reactions`);
+              return {
+                ...msg,
+                reactions: reactionRes.data.data || [],
+              };
+            } catch {
+              return { ...msg, reactions: [] };
+            }
+          })
+        );
+        setMessages(messagesWithReactions);
+        
+        // Update last message ID for scroll tracking
+        if (messagesWithReactions.length > 0) {
+          lastMessageId.current = messagesWithReactions[messagesWithReactions.length - 1].id;
+        }
       }
     } catch (error: any) {
       console.error('Fetch messages error:', error);
+    }
+  };
+
+  // ========== FETCH REACTIONS FOR A SINGLE MESSAGE ==========
+  const fetchReactionsForMessage = async (messageId: string) => {
+    try {
+      const response = await api.get(`/chat/messages/${messageId}/reactions`);
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Fetch reactions error:', error);
+      return [];
+    }
+  };
+
+  // ========== HANDLE REACTION ==========
+  const handleReaction = async (messageId: string, emoji: string) => {
+    if (!currentUser) return;
+
+    try {
+      // Optimistic update
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.id !== messageId) return msg;
+          
+          const existingReactions = msg.reactions || [];
+          const existingIndex = existingReactions.findIndex(
+            (r) => r.userId === currentUser.id && r.emoji === emoji
+          );
+
+          let newReactions;
+          if (existingIndex !== -1) {
+            // Remove reaction if same emoji
+            newReactions = existingReactions.filter((_, i) => i !== existingIndex);
+          } else {
+            // Check if user reacted with different emoji
+            const userReactionIndex = existingReactions.findIndex(
+              (r) => r.userId === currentUser.id
+            );
+            // eslint-disable-next-line prefer-const
+            let updatedReactions = [...existingReactions];
+            if (userReactionIndex !== -1) {
+              // Remove old reaction
+              updatedReactions.splice(userReactionIndex, 1);
+            }
+            // Add new reaction (optimistic)
+            newReactions = [
+              ...updatedReactions,
+              {
+                id: `temp-${Date.now()}`,
+                emoji,
+                userId: currentUser.id,
+                user: {
+                  id: currentUser.id,
+                  name: currentUser.name,
+                },
+              },
+            ];
+          }
+          return { ...msg, reactions: newReactions };
+        })
+      );
+
+      // API call
+      const response = await api.post(`/chat/messages/${messageId}/reaction`, { emoji });
+      
+      if (response.data.success) {
+        // Update with actual data from server
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId ? { ...msg, reactions: response.data.data } : msg
+          )
+        );
+
+        // Emit socket event for real-time update
+        if (socketRef.current) {
+          socketRef.current.emit('reaction', {
+            roomId,
+            messageId,
+            emoji,
+            userId: currentUser.id,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('Reaction error:', error);
+      toast.error(error.response?.data?.message || 'Failed to add reaction');
+      // Revert by fetching latest reactions
+      const reactions = await fetchReactionsForMessage(messageId);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, reactions } : msg
+        )
+      );
     }
   };
 
@@ -366,9 +645,17 @@ export const ChatWindow = () => {
     return () => clearInterval(interval);
   }, [roomId]);
 
-  // ========== SCROLL TO BOTTOM ==========
+  // ========== ✅ SCROLL TO BOTTOM - ONLY FOR NEW MESSAGES ==========
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length === 0) return;
+    
+    const latestMessage = messages[messages.length - 1];
+    
+    // Only scroll if it's a new message (not reaction update)
+    if (latestMessage.id !== lastMessageId.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      lastMessageId.current = latestMessage.id;
+    }
   }, [messages]);
 
   // ========== SEND MESSAGE ==========
@@ -392,6 +679,7 @@ export const ChatWindow = () => {
         name: currentUser.name,
         profileImage: currentUser.profileImage,
       },
+      reactions: [],
     };
     setMessages((prev) => [...prev, tempMessage]);
 
@@ -478,7 +766,10 @@ export const ChatWindow = () => {
         name: currentUser.name,
         profileImage: currentUser.profileImage,
       },
+      reactions: [],
     };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     setMessages((prev) => [...prev, tempMessage]);
 
     try {
@@ -531,6 +822,7 @@ export const ChatWindow = () => {
             name: currentUser.name,
             profileImage: currentUser.profileImage,
           },
+          reactions: [],
         };
         setMessages((prev) => [...prev, tempMessage]);
 
@@ -663,6 +955,8 @@ export const ChatWindow = () => {
                   key={message.id}
                   message={message}
                   isOwn={message.sender.id === currentUser?.id}
+                  onReaction={handleReaction}
+                  currentUserId={currentUser?.id}
                 />
               ))
             )}

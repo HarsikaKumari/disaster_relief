@@ -237,6 +237,7 @@ async sendMessage(req: Request, res: Response): Promise<void> {
     });
   }
 }
+
 // ========== ADD REACTION ==========
 async addReaction(req: Request, res: Response): Promise<void> {
   try {
@@ -263,6 +264,25 @@ async addReaction(req: Request, res: Response): Promise<void> {
     res.status(500).json({
       success: false,
       message: error.message || 'Failed to add reaction',
+    });
+  }
+}
+
+// ========== GET REACTIONS ==========
+async getReactions(req: Request, res: Response): Promise<void> {
+  try {
+    const { messageId } = req.params;
+    const reactions = await chatService.getReactions(messageId);
+
+    res.status(200).json({
+      success: true,
+      data: reactions,
+    });
+  } catch (error: any) {
+    console.error('Get reactions error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to get reactions',
     });
   }
 }

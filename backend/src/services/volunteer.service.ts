@@ -1,6 +1,8 @@
-import prisma from '../config/prisma';
-import { UpdateVolunteerInput, VolunteerFilters } from '../types/volunteer.types';
-
+import prisma from "../config/prisma";
+import {
+  UpdateVolunteerInput,
+  VolunteerFilters,
+} from "../types/volunteer.types";
 export class VolunteerService {
   // ========== GET ALL VOLUNTEERS ==========
   async getAllVolunteers(filters: VolunteerFilters = {}) {
@@ -9,7 +11,7 @@ export class VolunteerService {
 
     // Build where clause
     const where: any = {
-      role: 'VOLUNTEER',
+      role: "VOLUNTEER",
       isActive: true,
     };
 
@@ -23,9 +25,9 @@ export class VolunteerService {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
         { skills: { has: search } },
       ];
     }
@@ -53,7 +55,7 @@ export class VolunteerService {
           updatedAt: true,
         },
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
         take: limit,
         skip,
@@ -77,7 +79,7 @@ export class VolunteerService {
     const volunteer = await prisma.user.findUnique({
       where: {
         id: volunteerId,
-        role: 'VOLUNTEER',
+        role: "VOLUNTEER",
       },
       select: {
         id: true,
@@ -102,7 +104,7 @@ export class VolunteerService {
         assignedEmergencies: {
           where: {
             status: {
-              in: ['ASSIGNED', 'IN_PROGRESS'],
+              in: ["ASSIGNED", "IN_PROGRESS"],
             },
           },
           select: {
@@ -117,7 +119,7 @@ export class VolunteerService {
     });
 
     if (!volunteer) {
-      throw new Error('Volunteer not found');
+      throw new Error("Volunteer not found");
     }
 
     return volunteer;
@@ -133,13 +135,19 @@ export class VolunteerService {
         ...(data.bio && { bio: data.bio }),
         ...(data.skills && { skills: data.skills }),
         ...(data.availability && { availability: data.availability }),
-        ...(data.verifiedVolunteer !== undefined && { 
+        ...(data.verifiedVolunteer !== undefined && {
           verifiedVolunteer: data.verifiedVolunteer,
           ...(data.verifiedVolunteer && { verificationDate: new Date() }),
         }),
-        ...(data.emergencyContactName && { emergencyContactName: data.emergencyContactName }),
-        ...(data.emergencyContactPhone && { emergencyContactPhone: data.emergencyContactPhone }),
-        ...(data.emergencyContactRelation && { emergencyContactRelation: data.emergencyContactRelation }),
+        ...(data.emergencyContactName && {
+          emergencyContactName: data.emergencyContactName,
+        }),
+        ...(data.emergencyContactPhone && {
+          emergencyContactPhone: data.emergencyContactPhone,
+        }),
+        ...(data.emergencyContactRelation && {
+          emergencyContactRelation: data.emergencyContactRelation,
+        }),
       },
       select: {
         id: true,
@@ -165,7 +173,7 @@ export class VolunteerService {
   // ========== VERIFY VOLUNTEER ==========
   async verifyVolunteer(volunteerId: string) {
     return prisma.user.update({
-      where: { id: volunteerId, role: 'VOLUNTEER' },
+      where: { id: volunteerId, role: "VOLUNTEER" },
       data: {
         verifiedVolunteer: true,
         verificationDate: new Date(),
@@ -176,14 +184,20 @@ export class VolunteerService {
   // ========== GET VOLUNTEER STATS ==========
   async getVolunteerStats() {
     const [total, available, verified, unverified] = await Promise.all([
-      prisma.user.count({ where: { role: 'VOLUNTEER', isActive: true } }),
-      prisma.user.count({ where: { role: 'VOLUNTEER', availability: 'AVAILABLE', isActive: true } }),
-      prisma.user.count({ where: { role: 'VOLUNTEER', verifiedVolunteer: true, isActive: true } }),
-      prisma.user.count({ where: { role: 'VOLUNTEER', verifiedVolunteer: false, isActive: true } }),
+      prisma.user.count({ where: { role: "VOLUNTEER", isActive: true } }),
+      prisma.user.count({
+        where: { role: "VOLUNTEER", availability: "AVAILABLE", isActive: true },
+      }),
+      prisma.user.count({
+        where: { role: "VOLUNTEER", verifiedVolunteer: true, isActive: true },
+      }),
+      prisma.user.count({
+        where: { role: "VOLUNTEER", verifiedVolunteer: false, isActive: true },
+      }),
     ]);
 
     const totalHours = await prisma.user.aggregate({
-      where: { role: 'VOLUNTEER', isActive: true },
+      where: { role: "VOLUNTEER", isActive: true },
       _sum: {
         totalHoursVolunteered: true,
       },
@@ -216,7 +230,7 @@ export class VolunteerService {
       data: {
         assignedToId: volunteerId,
         assignedAt: new Date(),
-        status: 'ASSIGNED',
+        status: "ASSIGNED",
       },
       include: {
         assignedTo: {
@@ -230,6 +244,8 @@ export class VolunteerService {
       },
     });
   }
+  // ========== CHANGE PASSWORD ==========
+  
 }
 
 export default new VolunteerService();

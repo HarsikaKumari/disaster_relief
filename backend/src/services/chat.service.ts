@@ -418,62 +418,86 @@ async sendMessage(data: SendMessageInput) {
     return totalUnread;
   }
 
-  // ========== ✅ ADD REACTION TO MESSAGE ==========
-  async addReaction(messageId: string, userId: string, emoji: string) {
-    // Check if message exists
-    const message = await prisma.chatMessage.findUnique({
-      where: { id: messageId },
-    });
-    if (!message) throw new Error('Message not found');
+  // ========== ADD REACTION ==========
+async addReaction(messageId: string, userId: string, emoji: string) {
+  // Check if message exists
+  const message = await prisma.chatMessage.findUnique({
+    where: { id: messageId },
+  });
+  if (!message) throw new Error('Message not found');
 
-    // Update or create reaction
-    const existing = await prisma.messageReaction.findUnique({
-      where: {
-        messageId_userId: {
-          messageId,
-          userId,
-        },
+  // Check if user already reacted
+  const existing = await prisma.messageReaction.findUnique({
+    where: {
+      messageId_userId: {
+        messageId,
+        userId,
       },
-    });
+    },
+  });
 
-    if (existing) {
-      if (existing.emoji === emoji) {
-        // Remove reaction if same emoji
-        await prisma.messageReaction.delete({
-          where: {
-            messageId_userId: {
-              messageId,
-              userId,
-            },
+  if (existing) {
+    if (existing.emoji === emoji) {
+      // Remove reaction if same emoji
+      await prisma.messageReaction.delete({
+        where: {
+          messageId_userId: {
+            messageId,
+            userId,
           },
-        });
-      } else {
-        // Update emoji
-        await prisma.messageReaction.update({
-          where: {
-            messageId_userId: {
-              messageId,
-              userId,
-            },
-          },
-          data: { emoji },
-        });
-      }
-    } else {
-      await prisma.messageReaction.create({
-        data: {
-          messageId,
-          userId,
-          emoji,
         },
       });
+    } else {
+      // Update emoji
+      await prisma.messageReaction.update({
+        where: {
+          messageId_userId: {
+            messageId,
+            userId,
+          },
+        },
+        data: { emoji },
+      });
     }
-
-    // Return updated reactions
-    return prisma.messageReaction.findMany({
-      where: { messageId },
+  } else {
+    // Add new reaction
+    await prisma.messageReaction.create({
+      data: {
+        messageId,
+        userId,
+        emoji,
+      },
     });
   }
+
+  // Return updated reactions with user info
+  return prisma.messageReaction.findMany({
+    where: { messageId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+}
+
+// ========== GET REACTIONS ==========
+async getReactions(messageId: string) {
+  return prisma.messageReaction.findMany({
+    where: { messageId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+}
 }
 
 export default new ChatService();

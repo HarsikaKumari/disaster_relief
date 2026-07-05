@@ -21,7 +21,7 @@ export const setupSocket = (server: HttpServer) => {
     // ========== JOIN ROOM ==========
     socket.on('join-room', ({ roomId, userId }) => {
       socket.join(roomId);
-      onlineUsers.set(userId, { socketId: socket.id, roomId });
+      onlineUsers.set(userId, { socketId: socket.id, roomId, userId });
       
       // Notify others in room
       socket.to(roomId).emit('user-online', { userId });
@@ -73,6 +73,30 @@ export const setupSocket = (server: HttpServer) => {
       } catch (error) {
         console.error('Send message error:', error);
         socket.emit('message-error', { error: 'Failed to send message' });
+      }
+    });
+
+    // ========== 🆕 REACTION HANDLER ==========
+    socket.on('reaction', async ({ roomId, messageId, emoji, userId }) => {
+      try {
+        console.log(`✅ Reaction: ${emoji} on message ${messageId} by user ${userId}`);
+        
+        // Add/remove reaction using service
+        const reactions = await chatService.addReaction(messageId, userId, emoji);
+        
+        // Broadcast updated reactions to everyone in the room
+        io.to(roomId).emit('reaction-updated', {
+          messageId,
+          reactions
+        });
+        
+        console.log(`📤 Reaction broadcasted to room ${roomId}`);
+      } catch (error) {
+        console.error('Reaction error:', error);
+        socket.emit('reaction-error', { 
+          messageId, 
+          error: 'Failed to process reaction' 
+        });
       }
     });
 

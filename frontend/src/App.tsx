@@ -13,6 +13,7 @@ import { ChatList } from "./pages/chat/ChatList";
 import { ChatWindow } from "./pages/chat/ChatWindow";
 import { Contact } from "./pages/Contact";
 import { Dashboard } from "./pages/Dashboard";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { Emergencies } from "./pages/Emergencies";
 import { Home } from "./pages/Home";
 import { Login } from "./pages/Login";
@@ -24,9 +25,15 @@ import { Resources } from "./pages/Resources";
 import { EmergencyDetails } from "./pages/ViewEmergencies";
 import { ViewVolunteer } from "./pages/ViewVolunteer";
 import { Volunteers } from "./pages/Volunteers";
-
+import { Settings } from "./pages/Settings";
 function App() {
   const isAuthenticated = !!localStorage.getItem("token");
+
+  // Get user role from localStorage
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userRole = user?.role || "CITIZEN";
+  const isAdmin = userRole === "ADMIN";
 
   return (
     <Router>
@@ -43,6 +50,16 @@ function App() {
         <Route
           path="/dashboard"
           element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/admin"
+          element={
+            isAuthenticated && isAdmin ? (
+              <AdminDashboard />
+            ) : (
+              <Navigate to={isAuthenticated ? "/dashboard" : "/login"} />
+            )
+          }
         />
         <Route
           path="/resources"
@@ -66,11 +83,15 @@ function App() {
         />
         <Route
           path="/volunteers/add"
-          element={isAuthenticated ? <AddVolunteer /> : <Navigate to="/login" />}
+          element={
+            isAuthenticated ? <AddVolunteer /> : <Navigate to="/login" />
+          }
         />
         <Route
           path="/volunteers/:id"
-          element={isAuthenticated ? <ViewVolunteer /> : <Navigate to="/login" />}
+          element={
+            isAuthenticated ? <ViewVolunteer /> : <Navigate to="/login" />
+          }
         />
         <Route
           path="/emergencies"
@@ -78,15 +99,21 @@ function App() {
         />
         <Route
           path="/emergencies/report"
-          element={isAuthenticated ? <AddEmergency /> : <Navigate to="/login" />}
+          element={
+            isAuthenticated ? <AddEmergency /> : <Navigate to="/login" />
+          }
         />
         <Route
           path="/emergencies/:id"
-          element={isAuthenticated ? <EmergencyDetails /> : <Navigate to="/login" />}
+          element={
+            isAuthenticated ? <EmergencyDetails /> : <Navigate to="/login" />
+          }
         />
         <Route
           path="/notifications"
-          element={isAuthenticated ? <Notifications /> : <Navigate to="/login" />}
+          element={
+            isAuthenticated ? <Notifications /> : <Navigate to="/login" />
+          }
         />
 
         {/* ===== CHAT ROUTES ===== */}
@@ -98,7 +125,10 @@ function App() {
           path="/chat/:roomId"
           element={isAuthenticated ? <ChatWindow /> : <Navigate to="/login" />}
         />
-
+        <Route
+          path="/settings"
+          element={isAuthenticated ? <Settings /> : <Navigate to="/login" />}
+        />
         {/* ===== 404 REDIRECT ===== */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

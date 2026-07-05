@@ -12,7 +12,7 @@ import resourceRoutes from './routes/resource.routes';
 import uploadRoutes from './routes/upload.routes';
 import userRoutes from './routes/user.routes';
 import volunteerRoutes from './routes/volunteer.routes';
-
+import adminRoutes from './routes/admin.routes';
 dotenv.config();
 
 const app = express();
@@ -59,7 +59,7 @@ app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/upload', uploadRoutes);
-
+app.use('/api/admin', adminRoutes);
 // ✅ 404 Handler
 app.use((_, res) => {
   res.status(404).json({

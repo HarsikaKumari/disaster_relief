@@ -295,6 +295,24 @@ body {
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
+  --color-primary: #4F5844;
+  --color-primary-dark: #4F5844;
+
+  /* Error - Emergency Red (Active Emergencies) */
+  --color-error: #ef4444;
+  --color-error-dark: #b91c1c;
+
+  /* Success - Vibrant Green (Available Resources & Missions Done) */
+  --color-success: #10b981;
+  --color-success-dark: #047857;
+
+  /* Info - Cyan / Teal Blue (Active Volunteers) */
+  --color-info: #06b6d4;
+  --color-info-dark: #0e7490;
+
+  /* Warning - Energetic Amber/Orange (Response Time) */
+  --color-warning: #f59e0b;
+  --color-warning-dark: #b45309;
 }
 
 /* ============================================
