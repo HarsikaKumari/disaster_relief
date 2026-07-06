@@ -1,8 +1,7 @@
 import {
-    ChevronRight,
-    MessageCircle,
-    Plus,
-    Search
+  ChevronRight,
+  MessageCircle,
+  Search
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +9,6 @@ import { toast } from 'sonner';
 import { Navbar } from '../../components/layouts/Navbar';
 import { Sidebar } from '../../components/layouts/sidebar';
 import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
 import api from '../../lib/api';
 
 // ============================================
@@ -175,10 +173,7 @@ const fetchChatRooms = async () => {
                   className="border-0 bg-transparent p-0 h-7 text-sm w-32 lg:w-48 focus:outline-none placeholder:text-text-tertiary/60"
                 />
               </div>
-              <Button className="bg-gradient-to-r from-primary to-primary-dark text-white rounded-xl shadow-lg shadow-primary/20">
-                <Plus className="w-4 h-4 mr-1.5" />
-                New Chat
-              </Button>
+            
             </div>
           </div>
 

@@ -628,6 +628,7 @@ export const ChatWindow = () => {
   // ========== INITIAL FETCH ==========
   useEffect(() => {
     if (!isValidRoomId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       navigate('/chat');
       return;

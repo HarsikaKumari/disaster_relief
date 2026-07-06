@@ -2,26 +2,23 @@
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
-  Bell,
   ChevronDown,
   ChevronUp,
   Filter,
   MapPin,
-  Menu,
   RefreshCw,
-  Search,
   Truck,
   Users,
   ZoomIn,
-  ZoomOut,
+  ZoomOut
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { Navbar } from "../components/layouts/Navbar";
 import { Sidebar } from "../components/layouts/sidebar";
 import { Badge } from "../components/ui/badge";
 import api from "../lib/api";
-import { Navbar } from "../components/layouts/Navbar";
 
 // ============================================
 // TYPES

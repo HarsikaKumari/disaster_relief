@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import resourceService from '../services/resource.service';
 import { CreateResourceInput, UpdateResourceInput, ResourceRequestInput, ResourceDeploymentInput } from '../types/resource.types';
+import prisma from '../config/prisma';
 
 export class ResourceController {
   async create(req: Request, res: Response): Promise<void> {
@@ -81,6 +82,84 @@ export class ResourceController {
       res.status(500).json({ success: false, message: error.message });
     }
   }
+  
+  async getDeployments(_req: Request, res: Response): Promise<void> {
+  try {
+      const deployments = await resourceService.getDeployments();
+      res.status(200).json({
+        success: true,
+        data: deployments,
+      });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+async updateDeploymentStatus(req: Request, res: Response): Promise<void> {
+  try {
+    const { deploymentId } = req.params;
+    const { status, notes } = req.body;
+
+    // Validate status
+    const validStatuses = ['IN_TRANSIT', 'DELIVERED', 'RETURNED'];
+    if (!validStatuses.includes(status)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid status. Allowed: IN_TRANSIT, DELIVERED, RETURNED',
+      });
+      return;
+    }
+
+    const deployment = await prisma.resourceDeployment.update({
+      where: { id: deploymentId },
+      data: {
+        status,
+        ...(status === 'DELIVERED' && { deliveredAt: new Date() }),
+        ...(notes && { notes }),
+      },
+      include: {
+        resource: true,
+        emergency: true,
+      },
+    });
+
+    if (status === 'DELIVERED') {
+      await prisma.resource.update({
+        where: { id: deployment.resourceId },
+        data: {
+          availableQty: {
+            decrement: deployment.quantity,
+          },
+        },
+      });
+    }
+
+    if (status === 'RETURNED') {
+      await prisma.resource.update({
+        where: { id: deployment.resourceId },
+        data: {
+          availableQty: {
+            increment: deployment.quantity,
+          },
+        },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: deployment,
+    });
+  } catch (error: any) {
+    console.error('Update deployment status error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
 }
 
 export default new ResourceController();

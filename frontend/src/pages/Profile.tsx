@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import {
   AlertTriangle,
   Award,
-  Bell,
   Calendar,
   Camera,
   CheckCircle,
@@ -12,23 +11,20 @@ import {
   Heart,
   LogOut,
   Mail,
-  Menu,
   Phone,
   Save,
-  Search,
   Star,
-  X,
+  X
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Navbar } from '../components/layouts/Navbar';
 import { Sidebar } from '../components/layouts/sidebar';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import api from '../lib/api';
-import { Navbar } from '../components/layouts/Navbar';
 
 // ============================================
 // TYPES
@@ -66,7 +62,6 @@ interface ProfileStats {
 // ============================================
 
 export const Profile = () => {
-  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -156,11 +151,7 @@ export const Profile = () => {
     });
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
+  
 
   const stats: ProfileStats[] = [
     {

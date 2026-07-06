@@ -26,14 +26,10 @@ import { EmergencyDetails } from "./pages/ViewEmergencies";
 import { ViewVolunteer } from "./pages/ViewVolunteer";
 import { Volunteers } from "./pages/Volunteers";
 import { Settings } from "./pages/Settings";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ViewDeployments } from './pages/ViewDeployments';
 function App() {
-  const isAuthenticated = !!localStorage.getItem("token");
-
   // Get user role from localStorage
-  const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : null;
-  const userRole = user?.role || "CITIZEN";
-  const isAdmin = userRole === "ADMIN";
 
   return (
     <Router>
@@ -46,91 +42,152 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* ===== PROTECTED ROUTES ===== */}
         <Route
           path="/dashboard"
-          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/admin"
           element={
-            isAuthenticated && isAdmin ? (
+            <ProtectedRoute requireAdmin>
               <AdminDashboard />
-            ) : (
-              <Navigate to={isAuthenticated ? "/dashboard" : "/login"} />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/resources"
-          element={isAuthenticated ? <Resources /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Resources />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/map"
-          element={isAuthenticated ? <Map /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Map />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/profile"
-          element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/resources/add"
-          element={isAuthenticated ? <AddResource /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <AddResource />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/volunteers"
-          element={isAuthenticated ? <Volunteers /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Volunteers />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/volunteers/add"
           element={
-            isAuthenticated ? <AddVolunteer /> : <Navigate to="/login" />
+            <ProtectedRoute>
+              <AddVolunteer />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/volunteers/:id"
           element={
-            isAuthenticated ? <ViewVolunteer /> : <Navigate to="/login" />
+            <ProtectedRoute>
+              <ViewVolunteer />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/emergencies"
-          element={isAuthenticated ? <Emergencies /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Emergencies />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/emergencies/report"
           element={
-            isAuthenticated ? <AddEmergency /> : <Navigate to="/login" />
+            <ProtectedRoute>
+              <AddEmergency />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/emergencies/:id"
           element={
-            isAuthenticated ? <EmergencyDetails /> : <Navigate to="/login" />
+            <ProtectedRoute>
+              <EmergencyDetails />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/notifications"
           element={
-            isAuthenticated ? <Notifications /> : <Navigate to="/login" />
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
           }
         />
-
-        {/* ===== CHAT ROUTES ===== */}
         <Route
           path="/chat"
-          element={isAuthenticated ? <ChatList /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <ChatList />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/chat/:roomId"
-          element={isAuthenticated ? <ChatWindow /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <ChatWindow />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/settings"
-          element={isAuthenticated ? <Settings /> : <Navigate to="/login" />}
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
         />
-        {/* ===== 404 REDIRECT ===== */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route
+          path="/resources/deploy"
+          element={
+            <ProtectedRoute>
+              <ViewDeployments />
+            </ProtectedRoute>
+          }
+        />
+         
+
+        <Route
+          path="*"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/" />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

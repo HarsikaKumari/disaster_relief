@@ -25,9 +25,6 @@ import { Sidebar } from '../../components/layouts/sidebar';
 import { Badge } from '../../components/ui/badge';
 import api from '../../lib/api';
 
-// ============================================
-// TYPES
-// ============================================
 
 interface User {
   id: string;
@@ -66,9 +63,6 @@ interface Stats {
   responseTime: { average: number; min: number; max: number };
 }
 
-// ============================================
-// DARK SKELETON COMPONENTS
-// ============================================
 
 const StatCardSkeleton = () => (
   <div className="bg-white/50 backdrop-blur-md rounded-2xl p-5 shadow-lg shadow-primary/5 border border-white/30">
@@ -98,9 +92,6 @@ const TableSkeleton = () => (
   </div>
 );
 
-// ============================================
-// STAT CARD
-// ============================================
 
 const StatCard = ({ title, value, icon, color, onClick, isLoading }: any) => (
   <motion.div
@@ -125,10 +116,6 @@ const StatCard = ({ title, value, icon, color, onClick, isLoading }: any) => (
     </div>
   </motion.div>
 );
-
-// ============================================
-// USER TABLE
-// ============================================
 
 const UserTable = ({ users, loading, onRefresh }: any) => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -214,7 +201,6 @@ const UserTable = ({ users, loading, onRefresh }: any) => {
           </thead>
           <tbody>
             {loading ? (
-              // ✅ Dark Gray/Black Skeleton Loading for Table
               Array(5).fill(0).map((_, i) => (
                 <TableSkeleton key={i} />
               ))
@@ -289,14 +275,14 @@ const UserTable = ({ users, loading, onRefresh }: any) => {
             <div className="space-y-2">
               <button
                 onClick={() => handleAction('verify', selectedUser.id)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-sand-light/50 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-sand-light/50 transition-colors text-left hover:bg-error/10 "
               >
                 <CheckCircle className="w-4 h-4 text-success" />
                 <span>Verify User</span>
               </button>
               <button
                 onClick={() => handleAction('make-admin', selectedUser.id)}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-sand-light/50 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-sand-light/50 transition-colors text-left hover:bg-error/10"
               >
                 <Crown className="w-4 h-4 text-warning" />
                 <span>Make Admin</span>
@@ -339,9 +325,6 @@ const UserTable = ({ users, loading, onRefresh }: any) => {
   );
 };
 
-// ============================================
-// MAIN ADMIN DASHBOARD
-// ============================================
 
 export const AdminDashboard = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -352,7 +335,6 @@ export const AdminDashboard = () => {
   const [filterRole, setFilterRole] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'settings'>('overview');
 
-  // ========== FETCH DATA ==========
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -376,7 +358,6 @@ export const AdminDashboard = () => {
     fetchData();
   }, []);
 
-  // ========== STATS CARDS ==========
   const statCards = stats ? [
     { title: 'Total Users', value: stats.totalUsers, icon: <Users className="w-4.5 h-4.5 text-white" />, color: 'bg-gradient-to-br from-primary to-primary-dark text-white' },
     { title: 'Active Emergencies', value: stats.activeEmergencies, icon: <AlertTriangle className="w-4.5 h-4.5 text-white" />, color: 'bg-gradient-to-br from-error to-error-dark text-white' },
@@ -407,7 +388,7 @@ export const AdminDashboard = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`cursor-pointer flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   activeTab === tab
                     ? 'bg-primary text-white shadow-lg shadow-primary/25'
                     : 'text-text-secondary hover:bg-sand-light/50'

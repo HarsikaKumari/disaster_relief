@@ -5,19 +5,22 @@ import {
   AlertTriangle,
   CheckCircle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ChevronUp,
   Clock,
   Droplet,
   Eye,
   Filter,
   Flame,
+  Image as ImageIcon,
   MapPin,
-  MoreHorizontal,
   Plus,
   RefreshCw,
   Search,
   Users,
   Wind,
+  X,
   Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -28,10 +31,6 @@ import { Sidebar } from "../components/layouts/sidebar";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import api from "../lib/api";
-
-// ============================================
-// TYPES
-// ============================================
 
 interface Emergency {
   id: string;
@@ -83,9 +82,101 @@ interface EmergencyStats {
   pending: number;
 }
 
-// ============================================
-// EMERGENCY CARD
-// ============================================
+
+const ImageGalleryModal = ({
+  images,
+  onClose,
+}: {
+  images: string[];
+  onClose: () => void;
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (!images || images.length === 0) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="relative max-w-4xl w-full bg-white/10 rounded-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        <div className="relative aspect-video bg-black/50">
+          <img
+            src={images[currentIndex]}
+            alt={`Emergency image ${currentIndex + 1}`}
+            className="w-full h-full object-contain"
+          />
+        </div>
+
+        {images.length > 1 && (
+          <div className="flex gap-2 p-3 bg-black/50 overflow-x-auto">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                  idx === currentIndex
+                    ? "border-primary"
+                    : "border-transparent hover:border-white/30"
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`Thumbnail ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex((prev) =>
+                  prev === 0 ? images.length - 1 : prev - 1,
+                );
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex((prev) =>
+                  prev === images.length - 1 ? 0 : prev + 1,
+                );
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </>
+        )}
+
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full text-white text-xs">
+          {currentIndex + 1} / {images.length}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 
 const EmergencyCard = ({
   emergency,
@@ -93,6 +184,8 @@ const EmergencyCard = ({
   emergency: Emergency;
   onRefresh: () => void;
 }) => {
+  const [showGallery, setShowGallery] = useState(false);
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "CRITICAL":
@@ -197,103 +290,138 @@ const EmergencyCard = ({
     }
   };
 
+  const hasImages = emergency.images && emergency.images.length > 0;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      className="bg-white/50 backdrop-blur-md rounded-2xl p-5 shadow-lg shadow-primary/5 border border-white/30 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div
-            className={`w-11 h-11 rounded-xl ${getSeverityColor(emergency.severity)} flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/10`}
-          >
-            {getTypeIcon(emergency.type)}
-          </div>
-          <div>
-            <h4 className="font-semibold text-text-primary">
-              {emergency.title}
-            </h4>
-            <div className="flex flex-wrap items-center gap-2 mt-1">
-              <Badge
-                className={`text-[10px] border ${getStatusColor(emergency.status)}`}
-              >
-                {getStatusLabel(emergency.status)}
-              </Badge>
-              <Badge
-                className={`text-[10px] border ${getSeverityColor(emergency.severity)}`}
-              >
-                {getSeverityLabel(emergency.severity)}
-              </Badge>
-              <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
-                {getTypeLabel(emergency.type)}
-              </Badge>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -4 }}
+        className="bg-white/50 backdrop-blur-md rounded-2xl p-5 shadow-lg shadow-primary/5 border border-white/30 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div
+              className={`w-11 h-11 rounded-xl ${getSeverityColor(emergency.severity)} flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/10`}
+            >
+              {getTypeIcon(emergency.type)}
+            </div>
+            <div>
+              <h4 className="font-semibold text-text-primary">
+                {emergency.title}
+              </h4>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <Badge
+                  className={`text-[10px] border ${getStatusColor(emergency.status)}`}
+                >
+                  {getStatusLabel(emergency.status)}
+                </Badge>
+                <Badge
+                  className={`text-[10px] border ${getSeverityColor(emergency.severity)}`}
+                >
+                  {getSeverityLabel(emergency.severity)}
+                </Badge>
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px]">
+                  {getTypeLabel(emergency.type)}
+                </Badge>
+              </div>
             </div>
           </div>
-        </div>
-        <button className="p-1.5 rounded-xl hover:bg-sand-light/50 transition-colors">
-          <MoreHorizontal className="w-4 h-4 text-text-tertiary" />
-        </button>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/20">
-        <div>
-          <p className="text-xs text-text-tertiary">Location</p>
-          <p className="text-sm text-text-secondary truncate flex items-center gap-1">
-            <MapPin className="w-3 h-3 text-text-tertiary" />
-            {emergency.location}
-          </p>
+          {hasImages && (
+            <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] flex items-center gap-1 cursor-pointer hover:bg-primary/20 transition-colors">
+              <ImageIcon className="w-3 h-3" />
+              {emergency.images.length}
+            </Badge>
+          )}
         </div>
-        <div>
-          <p className="text-xs text-text-tertiary">Victims</p>
-          <p className="text-sm font-semibold text-text-primary flex items-center gap-1">
-            <Users className="w-3 h-3 text-text-tertiary" />
-            {emergency.victimCount}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-text-tertiary">Reported By</p>
-          <p className="text-sm text-text-secondary">
-            {emergency.reportedBy?.name || "Unknown"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-text-tertiary">Reported At</p>
-          <p className="text-sm text-text-secondary flex items-center gap-1">
-            <Clock className="w-3 h-3 text-text-tertiary" />
-            {new Date(emergency.createdAt).toLocaleString()}
-          </p>
-        </div>
-        {emergency.assignedTo && (
-          <div className="col-span-2">
-            <p className="text-xs text-text-tertiary">Assigned To</p>
-            <p className="text-sm text-text-secondary">
-              {emergency.assignedTo.name}
-            </p>
+
+        {hasImages && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {emergency.images.slice(0, 4).map((img, idx) => (
+              <button
+                key={idx}
+                className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-white/30 hover:border-primary/50 transition-all hover:scale-105"
+              >
+                <img
+                  src={img}
+                  alt={`Emergency ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                {idx === 3 && emergency.images.length > 4 && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs font-medium">
+                    +{emergency.images.length - 4}
+                  </div>
+                )}
+              </button>
+            ))}
           </div>
         )}
-      </div>
 
-      <div className="flex gap-2 mt-3 pt-3 border-t border-white/20">
-        <Link to={`/emergencies/${emergency.id}`} className="flex-1">
-          <button className="w-full bg-primary/10 hover:bg-primary/20 text-primary rounded-xl py-1.5 text-xs font-medium transition-colors flex items-center justify-center gap-1">
+        <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-white/20">
+          <div>
+            <p className="text-xs text-text-tertiary">Location</p>
+            <p className="text-sm text-text-secondary truncate flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-text-tertiary" />
+              {emergency.location}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-text-tertiary">Victims</p>
+            <p className="text-sm font-semibold text-text-primary flex items-center gap-1">
+              <Users className="w-3 h-3 text-text-tertiary" />
+              {emergency.victimCount}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-text-tertiary">Reported By</p>
+            <p className="text-sm text-text-secondary">
+              {emergency.reportedBy?.name || "Unknown"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-text-tertiary">Reported At</p>
+            <p className="text-sm text-text-secondary flex items-center gap-1">
+              <Clock className="w-3 h-3 text-text-tertiary" />
+              {new Date(emergency.createdAt).toLocaleString()}
+            </p>
+          </div>
+          {emergency.assignedTo && (
+            <div className="col-span-2">
+              <p className="text-xs text-text-tertiary">Assigned To</p>
+              <p className="text-sm text-text-secondary">
+                {emergency.assignedTo.name}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2 mt-3 pt-3 border-t border-white/20">
+          <Link
+            to={`/emergencies/${emergency.id}`}
+            className="w-full bg-primary hover:bg-primary-dark text-white rounded-xl py-1.5 text-xs font-medium transition-colors flex items-center justify-center gap-1"
+            style={{
+              color:"white"
+            }}
+          >
+
             <Eye className="w-3.5 h-3.5" />
             View Details
-          </button>
-        </Link>
-        <button className="flex-1 bg-primary hover:bg-primary-dark text-white rounded-xl py-1.5 text-xs font-medium transition-colors flex items-center justify-center gap-1">
-          <CheckCircle className="w-3.5 h-3.5" />
-          Update Status
-        </button>
-      </div>
-    </motion.div>
+          </Link>
+        </div>
+      </motion.div>
+
+      {showGallery && (
+        <ImageGalleryModal
+          images={emergency.images}
+          onClose={() => setShowGallery(false)}
+        />
+      )}
+    </>
   );
 };
 
-// ============================================
-// STAT CARD
-// ============================================
 
 const StatCard = ({
   label,
@@ -353,7 +481,6 @@ export const Emergencies = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  // ========== FETCH EMERGENCIES ==========
   const fetchEmergencies = async () => {
     setLoading(true);
     try {
@@ -381,7 +508,6 @@ export const Emergencies = () => {
     fetchEmergencies();
   }, []);
 
-  // ========== FILTERS ==========
   const filteredEmergencies = emergencies.filter((e) => {
     const matchesSearch =
       e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -402,16 +528,13 @@ export const Emergencies = () => {
       />
 
       <div className="flex-1 min-w-0 overflow-y-auto h-screen">
-        {/* ===== NAVBAR ===== */}
         <Navbar
           title="Emergencies"
           subtitle="Manage all emergencies"
           onMenuClick={() => setMobileOpen(true)}
         />
 
-        {/* ===== CONTENT ===== */}
         <div className="p-3 md:p-4 space-y-4 pb-8">
-          {/* ===== STATS ===== */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
               label="Total"
@@ -443,10 +566,8 @@ export const Emergencies = () => {
             />
           </div>
 
-          {/* ===== ACTIONS BAR ===== */}
           <div className="bg-white/50 backdrop-blur-md rounded-2xl p-4 shadow-lg shadow-primary/5 border border-white/30">
             <div className="flex flex-wrap items-center gap-3">
-              {/* Search - Mobile */}
               <div className="flex-1 min-w-[150px] sm:hidden flex items-center gap-2 bg-white/50 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-white/30">
                 <Search className="w-3.5 h-3.5 text-text-tertiary" />
                 <input
@@ -458,7 +579,6 @@ export const Emergencies = () => {
                 />
               </div>
 
-              {/* Filter Toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-1.5 px-3 py-2 bg-white/50 backdrop-blur-sm rounded-xl border border-white/30 text-sm text-text-secondary hover:bg-white/70 transition-colors"
@@ -472,7 +592,6 @@ export const Emergencies = () => {
                 )}
               </button>
 
-              {/* Refresh */}
               <button
                 onClick={fetchEmergencies}
                 disabled={loading}
@@ -483,7 +602,6 @@ export const Emergencies = () => {
                 />
               </button>
 
-              {/* Report Emergency Button */}
               <Link to="/emergencies/report" className="ml-auto">
                 <Button className="bg-primary cursor-pointer hover:shadow-lg hover:shadow-error/30 text-white rounded-xl shadow-lg shadow-error/20">
                   <Plus className="w-4 h-4 mr-1.5" />
@@ -492,7 +610,6 @@ export const Emergencies = () => {
               </Link>
             </div>
 
-            {/* Filters */}
             <AnimatePresence>
               {showFilters && (
                 <motion.div
@@ -560,7 +677,6 @@ export const Emergencies = () => {
             </AnimatePresence>
           </div>
 
-          {/* ===== EMERGENCIES GRID ===== */}
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[1, 2, 3, 4].map((i) => (
@@ -610,7 +726,6 @@ export const Emergencies = () => {
             </div>
           )}
 
-          {/* ===== FOOTER ===== */}
           <div className="text-center text-[10px] text-text-tertiary/40 py-3">
             © 2026 Disaster Relief Coordination Platform
           </div>

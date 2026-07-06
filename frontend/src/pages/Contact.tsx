@@ -1,25 +1,25 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import {
-  Mail,
-  Phone,
-  MapPin,
-  Send,
-  MessageCircle,
-  Clock,
-  Globe,
-  CheckCircle,
-  Loader2,
-  Sparkles,
   Building2,
-  Users,
+  CheckCircle,
+  Clock,
   Heart,
+  Loader2,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Send,
+  Sparkles,
+  Users
 } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Badge } from '../components/ui/badge';
+import Navbar from '../components/global/Navbar';
 
 // ============================================
 // CONTACT PAGE
@@ -85,6 +85,7 @@ export const Contact = () => {
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-sand-light via-white to-secondary/20'>
+      <Navbar/>
       {/* ========== HERO SECTION ========== */}
       <section className='relative py-16 md:py-24 bg-gradient-olive text-white overflow-hidden'>
         <div className='absolute inset-0 bg-white/5' />

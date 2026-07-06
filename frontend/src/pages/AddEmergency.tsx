@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -7,15 +8,16 @@ import {
   Droplet,
   FileText,
   Flame,
-  Image,
   Loader2,
   MapPin,
   Phone,
   Plus,
+  Upload,
   User,
   Users,
   Wind,
-  Zap,
+  X,
+  Zap
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -27,10 +29,6 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import api from "../lib/api";
-
-// ============================================
-// TYPES
-// ============================================
 
 interface EmergencyFormData {
   title: string;
@@ -45,13 +43,10 @@ interface EmergencyFormData {
   victimCount: number;
 }
 
-// ============================================
-// ADD EMERGENCY PAGE
-// ============================================
-
 export const AddEmergency = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [step, setStep] = useState(1);
   const [emergencyId, setEmergencyId] = useState("");
   const [formData, setFormData] = useState<EmergencyFormData>({
@@ -67,13 +62,86 @@ export const AddEmergency = () => {
     victimCount: 1,
   });
   const [error, setError] = useState("");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    >
   ) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    if (files.length === 0) return;
+
+    if (selectedImages.length + files.length > 5) {
+      toast.error("You can upload maximum 5 images");
+      return;
+    }
+
+    const validFiles = files.filter((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} is larger than 5MB`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    setSelectedImages((prev) => [...prev, ...validFiles]);
+
+    const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
+    setImagePreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => {
+      const newPreviews = [...prev];
+      URL.revokeObjectURL(newPreviews[index]);
+      newPreviews.splice(index, 1);
+      return newPreviews;
+    });
+  };
+
+  const uploadImages = async (emergencyId: string) => {
+    if (selectedImages.length === 0) return;
+
+    setUploadingImages(true);
+    const formData = new FormData();
+    selectedImages.forEach((file) => {
+      formData.append("images", file);
+    });
+
+    try {
+      const response = await api.post(
+        `/upload/emergency/${emergencyId}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success(`${selectedImages.length} image(s) uploaded successfully!`);
+        setSelectedImages([]);
+        setImagePreviews([]);
+      } else {
+        toast.error(response.data.message || "Failed to upload images");
+      }
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(error.response?.data?.message || "Failed to upload images");
+    } finally {
+      setUploadingImages(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,7 +149,6 @@ export const AddEmergency = () => {
     setError("");
     setLoading(true);
 
-    // Validation
     if (!formData.title || !formData.description || !formData.location) {
       setError("Please fill in all required fields");
       setLoading(false);
@@ -105,14 +172,18 @@ export const AddEmergency = () => {
       const response = await api.post("/emergencies", payload);
 
       if (response.data.success) {
+        const newEmergencyId = response.data.data.id;
+        setEmergencyId(newEmergencyId);
+        if (selectedImages.length > 0) {
+          await uploadImages(newEmergencyId);
+        }
+
         toast.success("Emergency added successfully!");
-        setEmergencyId(response.data.data.id);
         setStep(2);
       } else {
         setError(response.data.message || "Failed to add emergency");
         toast.error(response.data.message || "Failed to add emergency");
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Add emergency error:", err);
       const message = err.response?.data?.message || "Failed to add emergency";
@@ -235,10 +306,10 @@ export const AddEmergency = () => {
                             formData.severity === "CRITICAL"
                               ? "bg-error"
                               : formData.severity === "HIGH"
-                                ? "bg-error/80"
-                                : formData.severity === "MEDIUM"
-                                  ? "bg-warning"
-                                  : "bg-success"
+                              ? "bg-error/80"
+                              : formData.severity === "MEDIUM"
+                              ? "bg-warning"
+                              : "bg-success"
                           }`}
                         />
                         Severity <span className="text-error">*</span>
@@ -386,26 +457,75 @@ export const AddEmergency = () => {
                     </div>
                   </div>
 
-                  {/* Images Upload */}
-                  <div className="space-y-1.5">
+                  {/* ✅ IMAGES UPLOAD WITH PREVIEW */}
+                  <div className="space-y-3">
                     <Label className="text-sm font-medium text-text-primary flex items-center gap-2">
                       <Camera className="w-4 h-4 text-text-tertiary" />
                       Upload Images
                       <span className="text-xs text-text-tertiary font-normal">
-                        (Optional)
+                        (Optional, max 5 images)
                       </span>
                     </Label>
-                    <div className="border-2 border-dashed border-white/30 hover:border-primary/50 transition-all duration-300 rounded-xl p-8 text-center cursor-pointer group">
+
+                    {/* Upload Area */}
+                    <div
+                      className={`border-2 border-dashed ${
+                        imagePreviews.length > 0
+                          ? "border-primary/50 bg-primary/5"
+                          : "border-white/30 hover:border-primary/50"
+                      } transition-all duration-300 rounded-xl p-6 text-center cursor-pointer group`}
+                      onClick={() => document.getElementById("imageInput")?.click()}
+                    >
+                      <input
+                        id="imageInput"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageSelect}
+                        className="hidden"
+                        disabled={uploadingImages || loading}
+                      />
                       <div className="w-14 h-14 bg-primary/5 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-primary/10 transition-colors">
-                        <Image className="w-6 h-6 text-text-tertiary/50 group-hover:text-primary transition-colors" />
+                        <Upload className="w-6 h-6 text-text-tertiary/50 group-hover:text-primary transition-colors" />
                       </div>
                       <p className="text-sm text-text-tertiary mt-2 group-hover:text-text-primary transition-colors">
                         Click or drag to upload images
                       </p>
                       <p className="text-xs text-text-tertiary/50 mt-0.5">
-                        PNG, JPG, JPEG up to 5MB
+                        PNG, JPG, JPEG up to 5MB each (max 5 images)
                       </p>
+                      {imagePreviews.length > 0 && (
+                        <p className="text-xs text-primary mt-2">
+                          {imagePreviews.length} image(s) selected
+                        </p>
+                      )}
                     </div>
+
+                    {/* ✅ Image Previews */}
+                    {imagePreviews.length > 0 && (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-3">
+                        {imagePreviews.map((preview, index) => (
+                          <div
+                            key={index}
+                            className="relative group rounded-xl overflow-hidden border border-white/30 aspect-square bg-white/50"
+                          >
+                            <img
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-error rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                              disabled={uploadingImages || loading}
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Buttons */}
@@ -421,13 +541,18 @@ export const AddEmergency = () => {
                     </Link>
                     <Button
                       type="submit"
-                      disabled={loading}
-                      className="flex-[2] bg-primary hover:shadow-xl hover:shadow-error/30 text-white rounded-xl shadow-lg shadow-error/20 h-11 font-medium transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] cursor-pointer   "
+                      disabled={loading || uploadingImages}
+                      className="flex-[2] bg-primary hover:bg-primary-dark text-white rounded-xl shadow-lg shadow-primary/20 h-11 font-medium transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Adding...
+                        </>
+                      ) : uploadingImages ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Uploading Images...
                         </>
                       ) : (
                         <>
@@ -440,7 +565,6 @@ export const AddEmergency = () => {
                 </form>
               </div>
             ) : (
-              // Success Step
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -455,8 +579,9 @@ export const AddEmergency = () => {
                   Emergency Added! 🎉
                 </h2>
                 <p className="text-text-secondary mt-2 max-w-sm mx-auto">
-                  The emergency has been added successfully. Response team has
-                  been notified.
+                  {selectedImages.length > 0
+                    ? `Emergency added with ${selectedImages.length} image(s). Response team has been notified.`
+                    : "The emergency has been added successfully. Response team has been notified."}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 mt-6">
                   <Link to="/emergencies" className="flex-1">

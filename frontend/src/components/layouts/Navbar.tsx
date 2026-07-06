@@ -1,6 +1,5 @@
+import { Bell, Menu, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Bell, Menu, Search, Sparkles } from 'lucide-react';
-import { Badge } from '../ui/badge';
 
 interface NavbarProps {
   title: string;

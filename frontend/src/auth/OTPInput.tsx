@@ -1,5 +1,5 @@
-import { useState, useRef, KeyboardEvent } from 'react';
 import { motion } from 'framer-motion';
+import { type KeyboardEvent, useRef, useState } from 'react';
 import { cn } from '../lib/utils';
 
 interface OTPInputProps {
@@ -83,6 +83,8 @@ export const OTPInput = ({
             transition={{ delay: index * 0.05 }}
           >
             <input
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
               ref={(el) => (inputRefs.current[index] = el)}
               type='text'
               inputMode='numeric'

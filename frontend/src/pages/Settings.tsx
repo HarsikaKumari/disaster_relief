@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -44,7 +45,7 @@ interface UserProfile {
 
 export const Settings = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "profile" | "security" | "notifications" | "preferences"
@@ -116,7 +117,6 @@ export const Settings = () => {
     // Load theme from localStorage
     const savedTheme =
       (localStorage.getItem("theme") as "light" | "dark") || "light";
-    setTheme(savedTheme);
     if (savedTheme === "dark") {
       document.documentElement.classList.add("dark");
     }
@@ -200,6 +200,7 @@ export const Settings = () => {
       if (response.data.success) {
         toast.success("Notification preferences saved!");
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error: any) {
       toast.error("Failed to save preferences");
     } finally {

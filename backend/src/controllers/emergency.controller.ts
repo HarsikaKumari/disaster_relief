@@ -13,7 +13,7 @@ export class EmergencyController {
       res.status(500).json({ success: false, message: error.message });
     }
   }
-
+ 
   async getAll(req: Request, res: Response): Promise<void> {
     try {
       const { status, severity, type } = req.query;
@@ -68,6 +68,22 @@ export class EmergencyController {
     try {
       const stats = await emergencyService.getEmergencyStats();
       res.status(200).json({ success: true, data: stats });
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
+   async delete(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId:string = req.body.userId;
+      const existing = await emergencyService.getEmergencyById(id);
+      if (!existing) {
+        res.status(404).json({ success: false, message: 'Emergency not found' });
+        return;
+      }
+
+      await emergencyService.deleteEmergency(id, userId);
+      res.status(200).json({ success: true, message: 'Emergency deleted successfully' });
     } catch (error: any) {
       res.status(500).json({ success: false, message: error.message });
     }

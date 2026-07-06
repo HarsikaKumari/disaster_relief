@@ -4,15 +4,12 @@ import {
   Briefcase,
   CheckCircle,
   Clock,
-  Edit,
   FileText,
   Heart,
   Mail,
   MapPin,
-  MessageCircle,
   Phone,
   Star,
-  Trash2,
   TrendingUp,
   Users
 } from 'lucide-react';
@@ -227,20 +224,7 @@ export const ViewVolunteer = () => {
                 </div>
               </div>
               <div className='flex gap-2'>
-                <Button
-                  variant='outline'
-                  className='border-white/30 text-text-secondary hover:bg-white/50 rounded-xl text-sm'
-                >
-                  <Edit className='w-4 h-4 mr-1.5' />
-                  Edit
-                </Button>
-                <Button
-                  variant='outline'
-                  className='border-error/20 text-error hover:bg-error/10 hover:border-error rounded-xl text-sm'
-                >
-                  <Trash2 className='w-4 h-4 mr-1.5' />
-                  Delete
-                </Button>
+              
               </div>
             </div>
           </motion.div>
@@ -365,16 +349,7 @@ export const ViewVolunteer = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className='flex gap-3'>
-            <Button className='flex-1 bg-primary hover:bg-primary-dark text-white rounded-xl h-11'>
-              <MessageCircle className='w-4 h-4 mr-2' />
-              Message Volunteer
-            </Button>
-            <Button className='flex-1 bg-success hover:bg-success-dark text-white rounded-xl h-11'>
-              <CheckCircle className='w-4 h-4 mr-2' />
-              Assign to Mission
-            </Button>
-          </div>
+         
         </div>
       </div>
     </div>

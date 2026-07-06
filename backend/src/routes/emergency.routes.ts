@@ -13,5 +13,6 @@ router.put('/:id', authenticate, emergencyController.update);
 
 // ========== ADMIN ONLY ==========
 router.post('/:id/assign', authenticate, authorize('ADMIN'), emergencyController.assign);
-
-export default router;
+router.put('/:id', authenticate, authorize('ADMIN'), emergencyController.update);
+router.delete('/:id', authenticate, authorize('ADMIN'), emergencyController.delete);
+export default router; 

@@ -17,10 +17,10 @@ import {
   Search as SearchIcon,
   Shield,
   Star,
-  Users,
+  Users
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Navbar } from "../components/layouts/Navbar";
 import { Sidebar } from "../components/layouts/sidebar";
@@ -64,9 +64,11 @@ interface VolunteerStats {
 
 const VolunteerCard = ({
   volunteer,
+  onChat,
 }: {
   volunteer: Volunteer;
   onRefresh: () => void;
+  onChat: (volunteer: Volunteer) => void;
 }) => {
   const getAvailabilityColor = (availability: string) => {
     switch (availability) {
@@ -214,13 +216,13 @@ const VolunteerCard = ({
                 View Details
               </button>
             </Link>
-            <button className="flex-1 bg-primary hover:bg-primary-dark text-white rounded-xl py-1.5 text-xs font-medium transition-colors flex items-center justify-center gap-1">
+            {/* ✅ CHAT BUTTON - FIXED */}
+            <button
+              onClick={() => onChat(volunteer)}
+              className="flex-1 bg-primary hover:bg-primary-dark text-white rounded-xl py-1.5 text-xs font-medium transition-colors flex items-center justify-center gap-1"
+            >
               <MessageCircle className="w-3.5 h-3.5" />
               Message
-            </button>
-            <button className="flex-1 bg-success/10 hover:bg-success/20 text-success rounded-xl py-1.5 text-xs font-medium transition-colors flex items-center justify-center gap-1">
-              <CheckCircle className="w-3.5 h-3.5" />
-              Assign
             </button>
           </div>
         </div>
@@ -276,11 +278,9 @@ const StatCard = ({
   </div>
 );
 
-// ============================================
-// MAIN VOLUNTEERS PAGE
-// ============================================
 
 export const Volunteers = () => {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
@@ -296,7 +296,8 @@ export const Volunteers = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  // ========== FETCH VOLUNTEERS ==========
+  
+
   const fetchVolunteers = async () => {
     setLoading(true);
     try {
@@ -306,7 +307,6 @@ export const Volunteers = () => {
       ]);
 
       if (volunteersRes.data.success) {
-        // Transform API data to match component format
         const formattedVolunteers = volunteersRes.data.data.map((v: any) => ({
           id: v.id,
           name: v.name,
@@ -360,6 +360,29 @@ export const Volunteers = () => {
     return matchesSearch && matchesAvailability && matchesStatus;
   });
 
+  // ========== FETCH EMERGENCIES ==========
+ 
+  // ========== OPEN CHAT ==========
+  const handleOpenChat = async (volunteer: Volunteer) => {
+    try {
+      const response = await api.post("/chat/rooms", {
+        name: `Chat with ${volunteer.name}`,
+        isGroup: false,
+        memberIds: [volunteer.id],
+      });
+      if (response.data.success) {
+        navigate(`/chat/${response.data.data.id}`);
+      }
+    } catch (error: any) {
+      console.error("Chat error:", error);
+      toast.error(error.response?.data?.message || "Failed to open chat");
+    }
+  };
+
+  // ========== OPEN ASSIGN MODAL ==========
+
+  // ========== ASSIGN VOLUNTEER ==========
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sand-light via-[#F5EDE4] to-accent/5 flex">
       <Sidebar
@@ -369,7 +392,6 @@ export const Volunteers = () => {
       />
 
       <div className="flex-1 min-w-0 overflow-y-auto h-screen">
-        {/* Navbar */}
         <Navbar
           title="Volunteers"
           subtitle="Manage and view all volunteers"
@@ -552,6 +574,7 @@ export const Volunteers = () => {
                   key={volunteer.id}
                   volunteer={volunteer}
                   onRefresh={fetchVolunteers}
+                  onChat={handleOpenChat}
                 />
               ))}
             </div>

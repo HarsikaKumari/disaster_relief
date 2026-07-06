@@ -3,13 +3,13 @@ import {
   UpdateVolunteerInput,
   VolunteerFilters,
 } from "../types/volunteer.types";
+
 export class VolunteerService {
   // ========== GET ALL VOLUNTEERS ==========
-  async getAllVolunteers(filters: VolunteerFilters = {}) {
-    const { availability, verified, search, limit = 20, page = 1 } = filters;
+ async getAllVolunteers(filters: VolunteerFilters = {}) {
+    const { availability,  search, limit = 20, page = 1 } = filters;
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {
       role: "VOLUNTEER",
       isActive: true,
@@ -19,10 +19,7 @@ export class VolunteerService {
       where.availability = availability;
     }
 
-    if (verified !== undefined) {
-      where.verifiedVolunteer = verified;
-    }
-
+    
     if (search) {
       where.OR = [
         { name: { contains: search, mode: "insensitive" } },
@@ -53,6 +50,7 @@ export class VolunteerService {
           emergencyContactPhone: true,
           createdAt: true,
           updatedAt: true,
+          isVerified: true, // ✅ Debug - see who is verified
         },
         orderBy: {
           createdAt: "desc",
@@ -63,6 +61,7 @@ export class VolunteerService {
       prisma.user.count({ where }),
     ]);
 
+
     return {
       data: volunteers,
       pagination: {
@@ -72,7 +71,7 @@ export class VolunteerService {
         totalPages: Math.ceil(total / limit),
       },
     };
-  }
+}
 
   // ========== GET VOLUNTEER BY ID ==========
   async getVolunteerById(volunteerId: string) {
@@ -100,7 +99,6 @@ export class VolunteerService {
         emergencyContactRelation: true,
         createdAt: true,
         updatedAt: true,
-        // Get assigned emergencies
         assignedEmergencies: {
           where: {
             status: {
@@ -181,6 +179,17 @@ export class VolunteerService {
     });
   }
 
+  // ========== UNVERIFY VOLUNTEER ==========
+  async unverifyVolunteer(volunteerId: string) {
+    return prisma.user.update({
+      where: { id: volunteerId, role: "VOLUNTEER" },
+      data: {
+        verifiedVolunteer: false,
+        verificationDate: null,
+      },
+    });
+  }
+
   // ========== GET VOLUNTEER STATS ==========
   async getVolunteerStats() {
     const [total, available, verified, unverified] = await Promise.all([
@@ -206,8 +215,8 @@ export class VolunteerService {
     return {
       total,
       available,
-      verified,
-      unverified,
+      verified,      // ✅ Admin verified volunteers
+      unverified,    // ✅ Not admin verified yet
       totalHoursVolunteered: totalHours._sum.totalHoursVolunteered || 0,
     };
   }
@@ -244,8 +253,70 @@ export class VolunteerService {
       },
     });
   }
+
   // ========== CHANGE PASSWORD ==========
-  
+  async changePassword(volunteerId: string, newPassword: string) {
+    // Password hashing will be done in controller
+    return prisma.user.update({
+      where: { id: volunteerId },
+      data: {
+        password: newPassword,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  // ========== GET VOLUNTEER BY EMAIL ==========
+  async getVolunteerByEmail(email: string) {
+    return prisma.user.findUnique({
+      where: { email, role: "VOLUNTEER" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        profileImage: true,
+        bio: true,
+        skills: true,
+        availability: true,
+        verifiedVolunteer: true,
+        totalHoursVolunteered: true,
+        rating: true,
+        completedMissions: true,
+      },
+    });
+  }
+
+  // ========== GET VOLUNTEER STATS BY ID ==========
+  async getVolunteerStatsById(volunteerId: string) {
+    const stats = await prisma.user.findUnique({
+      where: { id: volunteerId, role: "VOLUNTEER" },
+      select: {
+        id: true,
+        name: true,
+        totalHoursVolunteered: true,
+        completedMissions: true,
+        rating: true,
+        verifiedVolunteer: true,
+        _count: {
+          select: {
+            assignedEmergencies: true,
+          },
+        },
+      },
+    });
+
+    if (!stats) {
+      throw new Error("Volunteer not found");
+    }
+
+    return stats;
+  }
 }
 
 export default new VolunteerService();

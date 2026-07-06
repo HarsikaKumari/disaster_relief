@@ -695,3 +695,11 @@ a:hover {
 .greenTint{
  color:#4F5844;
 }
+
+button{
+  cursor: pointer;
+}
+select{
+  cursor: pointer;
+
+}

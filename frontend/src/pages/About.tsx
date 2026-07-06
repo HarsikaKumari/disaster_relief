@@ -1,20 +1,19 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import {
-  Shield,
-  Target,
-  Users,
-  Heart,
-  Globe,
-  Clock,
-  Award,
-  Sparkles,
   ArrowRight,
+  Award,
   CheckCircle,
-  Building2,
+  Clock,
+  Globe,
   Handshake,
-  BadgeCheck,
+  Heart,
+  Shield,
+  Sparkles,
+  Target,
+  Users
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import Navbar from '../components/global/Navbar';
 
 export const About = () => {
   const stats = [
@@ -118,6 +117,7 @@ export const About = () => {
   return (
     <div className='min-h-screen bg-gradient-to-b from-sand-light via-white to-secondary/20'>
       {/* ========== HERO SECTION ========== */}
+      <Navbar/>
       <section className='relative py-16 md:py-24 bg-gradient-olive text-white overflow-hidden'>
         <div className='absolute inset-0 bg-white/5' />
         <div className='absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2' />
@@ -248,6 +248,8 @@ export const About = () => {
             {values.map((value, index) => (
               <motion.div
                 key={index}
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 variants={itemVariants}
                 className='bg-white rounded-xl p-6 shadow-soft hover:shadow-medium transition-shadow border border-sand-dark/20'
               >

@@ -4,6 +4,7 @@ import { authenticate } from '../middlewares/auth.middleware';
 import { v2 as cloudinaryV2 } from 'cloudinary';
 import prisma from '../config/prisma';
 import axios from 'axios';
+import emergencyService from '../services/emergency.service'; // ✅ IMPORT ADDED
 
 const router = Router();
 
@@ -78,7 +79,7 @@ router.post('/file', authenticate, upload.single('file'), async (req: any, res) 
         roomId: req.body.roomId,
         senderId: req.user.id,
         content: req.body.caption || (isImage ? '📎 Image' : '📎 File'),
-        type: messageType, // ✅ Fixed: FILE type for documents
+        type: messageType,
         mediaUrl: result.secure_url,
         isRead: false,
       },
@@ -128,7 +129,7 @@ router.post('/file', authenticate, upload.single('file'), async (req: any, res) 
 });
 
 // ========== DOWNLOAD FILE ==========
-//@ts-ignore
+// @ts-ignore
 router.get('/download/:fileId', authenticate, async (req: any, res) => {
   try {
     const { fileId } = req.params;
@@ -160,6 +161,56 @@ router.get('/download/:fileId', authenticate, async (req: any, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to download file',
+    });
+  }
+});
+
+// ============================================
+// ✅ NEW: UPLOAD EMERGENCY IMAGES
+// ============================================
+// @ts-ignore
+router.post('/emergency/:emergencyId', authenticate, upload.array('images', 5), async (req: any, res) => {
+  try {
+    const { emergencyId } = req.params;
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: 'No images uploaded' });
+    }
+
+    const imageUrls: string[] = [];
+
+    for (const file of req.files) {
+      const result: any = await new Promise((resolve, reject) => {
+        const stream = cloudinaryV2.uploader.upload_stream(
+          {
+            folder: 'disaster-relief/emergencies',
+            resource_type: 'image',
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(file.buffer);
+      });
+      imageUrls.push(result.secure_url);
+    }
+
+    // Add images to emergency
+    const emergency = await emergencyService.addEmergencyImages(emergencyId, imageUrls);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        images: imageUrls,
+        emergency,
+      },
+    });
+  } catch (error: any) {
+    console.error('❌ Emergency image upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to upload emergency images',
     });
   }
 });

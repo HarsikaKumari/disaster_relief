@@ -3,10 +3,13 @@ import { motion } from "framer-motion";
 import {
   AlertTriangle,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Droplet,
-  Edit,
+  Eye,
   Flame,
+  Image as ImageIcon,
   Loader2,
   MapPin,
   MessageCircle,
@@ -29,10 +32,6 @@ import { Sidebar } from "../components/layouts/sidebar";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import api from "../lib/api";
-
-// ============================================
-// TYPES
-// ============================================
 
 interface Emergency {
   id: string;
@@ -96,9 +95,99 @@ interface Volunteer {
   availability: string;
 }
 
-// ============================================
-// STATUS OPTIONS
-// ============================================
+const ImageGalleryModal = ({
+  images,
+  onClose,
+}: {
+  images: string[];
+  onClose: () => void;
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (!images || images.length === 0) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="relative max-w-5xl w-full bg-white/10 rounded-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        <div className="relative aspect-video bg-black/50">
+          <img
+            src={images[currentIndex]}
+            alt={`Emergency image ${currentIndex + 1}`}
+            className="w-full h-full object-contain"
+          />
+        </div>
+
+        {images.length > 1 && (
+          <div className="flex gap-2 p-3 bg-black/50 overflow-x-auto">
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
+                  idx === currentIndex
+                    ? "border-primary"
+                    : "border-transparent hover:border-white/30"
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`Thumbnail ${idx + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex((prev) =>
+                  prev === 0 ? images.length - 1 : prev - 1,
+                );
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex((prev) =>
+                  prev === images.length - 1 ? 0 : prev + 1,
+                );
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </>
+        )}
+
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full text-white text-xs">
+          {currentIndex + 1} / {images.length}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const STATUS_OPTIONS = [
   {
@@ -129,10 +218,6 @@ const STATUS_OPTIONS = [
   },
 ];
 
-// ============================================
-// MAIN COMPONENT
-// ============================================
-
 export const EmergencyDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -147,23 +232,19 @@ export const EmergencyDetails = () => {
   >("details");
   const [newStatus, setNewStatus] = useState("");
   const [updateMessage, setUpdateMessage] = useState("");
-  
-  // ========== USER ROLE STATE ==========
+  const [showGallery, setShowGallery] = useState(false);
+
   const [userRole, setUserRole] = useState<string>("");
-  
-  // ========== ASSIGNMENT STATE ==========
+
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [selectedVolunteerId, setSelectedVolunteerId] = useState("");
   const [loadingVolunteers, setLoadingVolunteers] = useState(false);
 
-  // ========== CHAT STATE ==========
   const [joiningChat, setJoiningChat] = useState(false);
 
-  // ========== CHECK IF USER IS ADMIN ==========
   const isAdmin = userRole === "ADMIN";
 
-  // ========== GET USER ROLE ==========
   useEffect(() => {
     const userStr = localStorage.getItem("user");
     if (userStr) {
@@ -177,7 +258,6 @@ export const EmergencyDetails = () => {
     }
   }, []);
 
-  // ========== FETCH EMERGENCY DETAILS ==========
   const fetchEmergencyDetails = async () => {
     if (!id) return;
     setLoading(true);
@@ -205,7 +285,7 @@ export const EmergencyDetails = () => {
           },
         ]);
       } else {
-        toast.error("Failed to load emergency details");
+        toast.error("F ailed to load emergency details");
       }
     } catch (error: any) {
       console.error("Fetch emergency error:", error);
@@ -222,7 +302,6 @@ export const EmergencyDetails = () => {
     fetchEmergencyDetails();
   }, [id]);
 
-  // ========== FETCH AVAILABLE VOLUNTEERS ==========
   const fetchAvailableVolunteers = async () => {
     setLoadingVolunteers(true);
     try {
@@ -238,7 +317,6 @@ export const EmergencyDetails = () => {
     }
   };
 
-  // ========== ASSIGN VOLUNTEER ==========
   const handleAssignVolunteer = async () => {
     if (!selectedVolunteerId) {
       toast.error("Please select a volunteer");
@@ -261,13 +339,14 @@ export const EmergencyDetails = () => {
       }
     } catch (error: any) {
       console.error("Assign error:", error);
-      toast.error(error.response?.data?.message || "Failed to assign volunteer");
+      toast.error(
+        error.response?.data?.message || "Failed to assign volunteer",
+      );
     } finally {
       setAssigning(false);
     }
   };
 
-  // ========== UPDATE STATUS ==========
   const handleStatusUpdate = async () => {
     if (!emergency || !newStatus || newStatus === emergency.status) {
       toast.info("No change in status");
@@ -295,7 +374,6 @@ export const EmergencyDetails = () => {
     }
   };
 
-  // ========== ADD UPDATE ==========
   const handleAddUpdate = async () => {
     if (!updateMessage.trim()) {
       toast.error("Please enter a message");
@@ -307,40 +385,38 @@ export const EmergencyDetails = () => {
       toast.success("Update added successfully");
       setUpdateMessage("");
       fetchEmergencyDetails();
-    } catch(error: any) {
-      console.log(error)
+    } catch (error: any) {
+      console.log(error);
       toast.error("Failed to add update");
     } finally {
       setUpdating(false);
     }
   };
 
-  // ========== OPEN EMERGENCY CHAT ==========
-const openEmergencyChat = async () => {
-  if (!emergency) return;
+  const openEmergencyChat = async () => {
+    if (!emergency) return;
 
-  setJoiningChat(true);
-  try {
-    const response = await api.post('/chat/emergency-chat', {
-      emergencyId: emergency.id,
-    });
+    setJoiningChat(true);
+    try {
+      const response = await api.post("/chat/emergency-chat", {
+        emergencyId: emergency.id,
+      });
 
-    if (response.data.success) {
-      const roomId = response.data.data.id;
-      console.log('Chat room ID:', roomId); // ✅ Debug
-      navigate(`/chat/${roomId}`);
-    } else {
-      toast.error('Failed to open chat');
+      if (response.data.success) {
+        const roomId = response.data.data.id;
+        console.log("Chat room ID:", roomId);
+        navigate(`/chat/${roomId}`);
+      } else {
+        toast.error("Failed to open chat");
+      }
+    } catch (error: any) {
+      console.error("Chat error:", error);
+      toast.error(error.response?.data?.message || "Failed to open chat");
+    } finally {
+      setJoiningChat(false);
     }
-  } catch (error: any) {
-    console.error('Chat error:', error);
-    toast.error(error.response?.data?.message || 'Failed to open chat');
-  } finally {
-    setJoiningChat(false);
-  }
-};
+  };
 
-  // ========== HELPERS ==========
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case "CRITICAL":
@@ -391,6 +467,36 @@ const openEmergencyChat = async () => {
     }
   };
 
+  const hasImages = emergency?.images && emergency.images.length > 0;
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const handleDelete = async () => {
+    setDeleteLoading(true);
+    if (!emergency) return;
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+      const response = await api.delete(`/emergencies/${emergency.id}`, {
+        data: {
+          userId: user.id,
+        },
+      });
+
+      if (response.data.success) {
+        toast.success("Emergency deleted successfully");
+        navigate(`/emergencies`);
+      } else {
+        toast.error(response.data.message || "Failed to delete emergency");
+      }
+    } catch (error: any) {
+      console.error("Delete emergency error:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to delete emergency",
+      );
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sand-light via-[#F5EDE4] to-accent/5 flex items-center justify-center">
@@ -440,9 +546,7 @@ const openEmergencyChat = async () => {
           onMenuClick={() => setMobileOpen(true)}
         />
 
-        {/* Content */}
         <div className="p-3 md:p-4 pb-8 space-y-4">
-          {/* Header Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -468,42 +572,93 @@ const openEmergencyChat = async () => {
                     <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px]">
                       {emergency.type.replace("_", " ")}
                     </Badge>
+                    {hasImages && (
+                      <Badge className="bg-primary/10 text-primary border-primary/20 text-[11px] flex items-center gap-1 cursor-pointer hover:bg-primary/20 transition-colors">
+                        <ImageIcon className="w-3 h-3" />
+                        {emergency.images.length} Images
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
               <div className="flex gap-2">
-                {/* ✅ Assign Button - Sirf Admin ko dikhega */}
-                {isAdmin && emergency.status !== "RESOLVED" && emergency.status !== "CANCELLED" && (
-                  <Button
-                    onClick={() => {
-                      setShowAssignModal(true);
-                      fetchAvailableVolunteers();
-                    }}
-                    className="bg-success hover:bg-success-dark text-white rounded-xl text-sm"
-                  >
-                    <Users className="w-4 h-4 mr-1.5" />
-                    Assign Volunteer
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  className="border-white/30 text-text-secondary hover:bg-white/50 rounded-xl text-sm"
-                >
-                  <Edit className="w-4 h-4 mr-1.5" />
-                  Edit
-                </Button>
+                {isAdmin &&
+                  emergency.status !== "RESOLVED" &&
+                  emergency.status !== "CANCELLED" && (
+                    <Button
+                      onClick={() => {
+                        setShowAssignModal(true);
+                        fetchAvailableVolunteers();
+                      }}
+                      className="bg-success hover:bg-success-dark text-white rounded-xl text-sm"
+                    >
+                      <Users className="w-4 h-4 mr-1.5" />
+                      Assign Volunteer
+                    </Button>
+                  )}
+
                 <Button
                   variant="outline"
                   className="border-error/20 text-error hover:bg-error/10 hover:border-error rounded-xl text-sm"
+                  onClick={handleDelete}
+                  disabled={deleteLoading}
                 >
-                  <Trash2 className="w-4 h-4 mr-1.5" />
-                  Delete
+                  {deleteLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      {" "}
+                      <Trash2 className="w-4 h-4 mr-1.5" />
+                      Delete
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
+
+            {hasImages && (
+              <div className="mt-4 pt-4 border-t border-white/20">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-medium text-text-primary flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-text-tertiary" />
+                    Images ({emergency.images.length})
+                  </p>
+                  <button
+                    onClick={() => setShowGallery(true)}
+                    className="text-xs text-primary hover:text-primary-dark font-medium flex items-center gap-1"
+                  >
+                    <Eye className="w-3 h-3" />
+                    View All
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {emergency.images.slice(0, 4).map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setShowGallery(true)}
+                      className="relative aspect-square rounded-xl overflow-hidden border border-white/30 hover:border-primary/50 transition-all hover:scale-105 group"
+                    >
+                      <img
+                        src={img}
+                        alt={`Emergency image ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all" />
+                      {idx === 3 && emergency.images.length > 4 && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-bold">
+                          +{emergency.images.length - 4}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
 
-          {/* Status Update Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -553,7 +708,6 @@ const openEmergencyChat = async () => {
             </div>
           </motion.div>
 
-          {/* Tabs */}
           <div className="bg-white/50 backdrop-blur-md rounded-2xl shadow-lg shadow-primary/5 border border-white/30 overflow-hidden">
             <div className="flex border-b border-white/20">
               {["details", "timeline", "updates"].map((tab) => (
@@ -572,14 +726,12 @@ const openEmergencyChat = async () => {
             </div>
 
             <div className="p-5">
-              {/* Details Tab */}
               {activeTab === "details" && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="space-y-4"
                 >
-                  {/* Description */}
                   <div>
                     <h4 className="text-sm font-semibold text-text-primary mb-1.5">
                       Description
@@ -589,7 +741,6 @@ const openEmergencyChat = async () => {
                     </p>
                   </div>
 
-                  {/* Grid Info */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-white/20">
                     <div>
                       <p className="text-xs text-text-tertiary uppercase tracking-wider">
@@ -635,7 +786,6 @@ const openEmergencyChat = async () => {
                 </motion.div>
               )}
 
-              {/* Timeline Tab */}
               {activeTab === "timeline" && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -677,7 +827,6 @@ const openEmergencyChat = async () => {
                 </motion.div>
               )}
 
-              {/* Updates Tab */}
               {activeTab === "updates" && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -708,7 +857,6 @@ const openEmergencyChat = async () => {
             </div>
           </div>
 
-          {/* ✅ CHAT BUTTON - Auto-create Emergency Chat */}
           <Button
             onClick={openEmergencyChat}
             disabled={joiningChat}
@@ -729,9 +877,12 @@ const openEmergencyChat = async () => {
         </div>
       </div>
 
-      {/* ============================================
-      ASSIGN VOLUNTEER MODAL
-      ============================================ */}
+      {showGallery && (
+        <ImageGalleryModal
+          images={emergency.images || []}
+          onClose={() => setShowGallery(false)}
+        />
+      )}
       {showAssignModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
@@ -791,7 +942,10 @@ const openEmergencyChat = async () => {
                       <option value="">Choose a volunteer...</option>
                       {volunteers.map((v) => (
                         <option key={v.id} value={v.id}>
-                          {v.name} {v.skills?.length > 0 ? `(${v.skills.join(", ")})` : ""}
+                          {v.name}{" "}
+                          {v.skills?.length > 0
+                            ? `(${v.skills.join(", ")})`
+                            : ""}
                         </option>
                       ))}
                     </select>
@@ -799,9 +953,14 @@ const openEmergencyChat = async () => {
 
                   {selectedVolunteerId && (
                     <div className="bg-sand-light/30 rounded-xl p-3 border border-white/20">
-                      <p className="text-xs text-text-tertiary">Selected Volunteer</p>
+                      <p className="text-xs text-text-tertiary">
+                        Selected Volunteer
+                      </p>
                       <p className="text-sm font-medium text-text-primary">
-                        {volunteers.find(v => v.id === selectedVolunteerId)?.name}
+                        {
+                          volunteers.find((v) => v.id === selectedVolunteerId)
+                            ?.name
+                        }
                       </p>
                     </div>
                   )}
@@ -821,7 +980,9 @@ const openEmergencyChat = async () => {
                 </Button>
                 <Button
                   onClick={handleAssignVolunteer}
-                  disabled={assigning || !selectedVolunteerId || loadingVolunteers}
+                  disabled={
+                    assigning || !selectedVolunteerId || loadingVolunteers
+                  }
                   className="flex-1 bg-success hover:bg-success-dark text-white rounded-xl"
                 >
                   {assigning ? (

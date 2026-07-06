@@ -141,6 +141,17 @@ export class ResourceService {
 
     return { total, available, deployed, depleted };
   }
+  async getDeployments() {
+    return prisma.resourceDeployment.findMany({
+      include: {
+        resource: true,
+        emergency: true,
+      },
+      orderBy: {
+        deployedAt: 'desc',
+      },
+    });
+  }
 }
 
 export default new ResourceService();

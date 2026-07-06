@@ -201,7 +201,7 @@ model Emergency {
 
   // Victim details
   reportedById String
-  reportedBy   User    @relation("ReportedEmergencies", fields: [reportedById], references: [id])
+  reportedBy   User    @relation("ReportedEmergencies", fields: [reportedById], references: [id],onDelete:Cascade)
   victimName   String?
   victimPhone  String?
   victimCount  Int     @default(1)
@@ -211,7 +211,7 @@ model Emergency {
 
   // Assignment
   assignedToId String?
-  assignedTo   User?     @relation("AssignedEmergencies", fields: [assignedToId], references: [id])
+  assignedTo   User?     @relation("AssignedEmergencies", fields: [assignedToId], references: [id],onDelete:Cascade)
   assignedAt   DateTime?
 
   // Resolution
@@ -247,7 +247,7 @@ model Emergency {
 model EmergencyUpdate {
   id          String          @id @default(cuid())
   emergencyId String
-  emergency   Emergency       @relation(fields: [emergencyId], references: [id])
+  emergency   Emergency       @relation(fields: [emergencyId], references: [id],onDelete:Cascade)
   status      EmergencyStatus
   message     String
   location    String?
@@ -271,7 +271,7 @@ model EmergencyUpdate {
 model EmergencyTimeline {
   id            String    @id @default(cuid())
   emergencyId   String
-  emergency     Emergency @relation(fields: [emergencyId], references: [id])
+  emergency     Emergency @relation(fields: [emergencyId], references: [id],onDelete:Cascade)
   action        String
   description   String
   performedById String
@@ -284,6 +284,13 @@ model EmergencyTimeline {
   @@index([createdAt])
   @@map("emergency_timeline")
 }
+
+
+
+
+
+
+
 
 // ============================================
 // RESOURCE MODEL
